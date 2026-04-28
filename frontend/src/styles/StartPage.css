@@ -1,0 +1,151 @@
+/* ============================
+   STARTPAGE – STYLES
+   ============================ */
+
+/* Drobne ozdobniki tylko dla strony głównej */
+.bullet-orange {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    background-color: #ff7a1a;
+    display: inline-block;
+}
+
+/* ============================
+   HERO – KAFELKI
+   ============================ */
+
+.hero-cards-wrapper {
+    position: relative;
+    max-width: 420px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.hero-card {
+    border-radius: 20px;
+    background-color: #ffffff;
+    padding: 18px 20px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transform: scale(1);
+    transform-origin: center;
+    cursor: pointer;
+}
+
+.hero-card.main {
+    box-shadow: none !important;
+}
+
+.hero-card.side {
+    max-width: 100%;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(8px);
+}
+
+.hero-card:hover {
+    transform: scale(1.06);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.14) !important;
+    z-index: 10;
+}
+
+.hero-card.main:hover {
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.18) !important;
+}
+
+.hero-car-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background-color: #f8f9fa;
+}
+
+.hero-car-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.hero-car-sub {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+.hero-car-spec {
+    font-weight: 700;
+    color: #ff7a1a;
+}
+
+.progress-wrapper .progress {
+    height: 0.75rem;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+/* ============================
+   SEKCJA MODUŁÓW
+   ============================ */
+
+.card-hover {
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    border-radius: 18px;
+}
+
+.card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 26px rgba(0, 0, 0, 0.08);
+}
+
+/* Ikony */
+.icon-circle {
+    width: 42px;
+    height: 42px;
+    border-radius: 999px;
+    background-color: rgba(255, 122, 26, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+}
+
+/* ============================
+   DLACZEGO AUTOVERSE
+   ============================ */
+
+.why-box {
+    border-radius: 18px;
+    padding: 20px 22px;
+    background-color: #ffffff;
+}
+
+/* ============================
+   LICZBY (tylko na startowej)
+   ============================ */
+
+.bg-orange-gradient {
+    background: linear-gradient(90deg, #ff7a1a, #ff9c42);
+}
+
+/* ============================
+   NAVBAR
+   ============================ */
+
+.navbar-brand {
+    letter-spacing: 0.04em;
+}
+
+/* ============================
+   RESPONSYWNOŚĆ
+   ============================ */
+
+@media (max-width: 767.98px) {
+    .hero-cards-wrapper {
+        max-width: 100%;
+    }
+
+    .hero-card.side {
+        max-width: 100%;
+    }
+}

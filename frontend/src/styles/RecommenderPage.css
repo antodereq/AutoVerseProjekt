@@ -1,0 +1,43 @@
+/* ============================
+   RECOMMEND PAGE – STYLES
+   ============================ */
+
+.recommend-page {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+/* Szerszy kontener */
+.recommend-container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+}
+
+.recommend-inner {
+    margin: 0 auto;
+    width: 100%;
+}
+
+@media (min-width: 992px) {
+    .recommend-inner {
+        max-width: 1400px;
+    }
+}
+
+/* Formularz */
+.recommend-form-card {
+    border-radius: 18px;
+}
+
+/* Wyniki */
+.recommend-result-card {
+    border-radius: 16px;
+}
+
+/* Placeholder dla braku wyników */
+.recommend-results-placeholder {
+    padding: 1.5rem;
+    border-radius: 16px;
+    background-color: #ffffff;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
