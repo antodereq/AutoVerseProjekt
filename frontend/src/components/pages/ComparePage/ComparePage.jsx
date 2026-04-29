@@ -12,6 +12,9 @@ export default function ComparePage() {
     const [carList, setCarList] = useState([]);
     const [showCarList, setShowCarList] = useState(false);
 
+    const [engineList, setEngineList] = useState([]);
+    const [engine, setEngine] = useState("");
+
     const fieldEmpty = inpCarName === "" && selectCarBrand === "";
 
     useEffect(() => {
@@ -44,6 +47,8 @@ export default function ComparePage() {
             });
 
             const data = await response.json();
+            console.log("PARAMS:", inpCarName, selectCarBrand);
+            console.log("DATA Z PHP:", data);
             setCarList(data);
         }
 
@@ -85,13 +90,38 @@ export default function ComparePage() {
 
                 {carList.map((car) => {
                     return (
-                        <div key={`${car.marka}-${car.model}`} className="border rounded p-2 mb-2">
-                            {car.marka} {car.model}
+                        <div key={`${car.marka}-${car.model}`} className="border rounded p-2 mb-2" onClick={() => openSpecPage}>
+                            <div>{car.marka} {car.model}</div>
+
+                            <div>
+                                <img
+                                    src={`/${car.sciezka}`}
+                                    alt={`${car.marka} ${car.model}`}
+                                    style={{ width: "120px" }}
+                                />
+                            </div>
                         </div>
                     );
                 })}
+                <div>
+                    
+                </div>
             </div>
         );
+    }
+    function openSpecPage(){
+        return (
+            <div className="border rounded p-2 mb-2">
+                <select 
+                    className="form-select mb-3"
+                    id="car-engine-select"
+                    value={engine}
+                    onChange={(e) => setEngine(e.target.value)}
+                >
+                    <option value="">Wybierz silnik...</option>
+                </select>
+            </div>
+        )
     }
 
     return (
@@ -123,7 +153,7 @@ export default function ComparePage() {
                                         type="button"
                                         className="w-100 h-100 border-0 bg-transparent"
                                         style={{ padding: "16px" }}
-                                        onClick={() => setShowCarList(true)}
+                                        onClick={() => setShowCarList(prev => !prev)} //drugie kliknięcie "dodaj samochód" zamyka okno
                                     >
                                         <div className="border rounded-3 p-3 h-100 d-flex flex-column justify-content-center">
                                             <div style={{ fontSize: "32px", lineHeight: "1" }}>
