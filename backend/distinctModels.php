@@ -1,4 +1,5 @@
 <?php
+    include("cors.php");
     include("dbConnect.php");
     $sql = "SELECT 
             marka.nazwa, 

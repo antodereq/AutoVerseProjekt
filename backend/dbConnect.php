@@ -2,7 +2,7 @@
     $host = 'localhost';
     $user = 'root';
     $password = '';
-    $dbName = 'autoverse3';
+    $dbName = 'autoverse2';
 
     $conn = mysqli_connect($host, $user, $password, $dbName);
     if (!$conn) {

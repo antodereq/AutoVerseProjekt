@@ -1,70 +1,99 @@
 // src/components/pages/ComparePage/ComparePage.jsx
 import { useEffect, useState } from "react";
 import Navbar from "../../universal/Navbar.jsx";
+import { API_URL } from "../../../config/api";
 
 const MAX_SLOTS = 9;
 
 export default function ComparePage() {
     const [inpCarName, setInpCarName] = useState("");
     const [selectCarBrand, setSelectCarBrand] = useState("");
-    const fieldEmpty = inpCarName === "" && selectCarBrand === ""; //true gdy pole wyszukiwania jest puste, a marka nie jest wybrana
+    const [brands, setBrands] = useState([]);
     const [carList, setCarList] = useState([]);
-    function openCarList(){
-        return(
-            <div>
-                <select 
+    const [showCarList, setShowCarList] = useState(false);
+
+    const fieldEmpty = inpCarName === "" && selectCarBrand === "";
+
+    useEffect(() => {
+        async function fetchBrands() {
+            const response = await fetch(`${API_URL}/getBrands.php`);
+            const data = await response.json();
+            setBrands(data);
+        }
+
+        fetchBrands();
+    }, []);
+
+    useEffect(() => {
+        async function fetchCarList() {
+            const response = await fetch(`${API_URL}/distinctModels.php`);
+            const data = await response.json();
+            setCarList(data);
+        }
+
+        async function fetchCarListByParameters() {
+            const response = await fetch(`${API_URL}/modelsByParams.php`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    name: inpCarName,
+                    brand: selectCarBrand,
+                }),
+            });
+
+            const data = await response.json();
+            setCarList(data);
+        }
+
+        if (fieldEmpty) {
+            fetchCarList();
+        } else {
+            fetchCarListByParameters();
+        }
+    }, [inpCarName, selectCarBrand, fieldEmpty]);
+
+    function openCarList() {
+        return (
+            <div className="mt-3">
+                <select
                     className="form-select mb-3"
                     id="car-brand-select"
                     value={selectCarBrand}
                     onChange={(e) => setSelectCarBrand(e.target.value)}
                 >
                     <option value="">Wybierz markę...</option>
+
+                    {brands.map((brand) => {
+                        return (
+                            <option key={brand.nazwa} value={brand.nazwa}>
+                                {brand.nazwa}
+                            </option>
+                        );
+                    })}
                 </select>
-                <input 
-                    type="text" 
-                    placeholder="Wyszukaj samochód..." 
-                    className="form-control mb-3" 
+
+                <input
+                    type="text"
+                    placeholder="Wyszukaj samochód..."
+                    className="form-control mb-3"
                     id="car-search-input"
                     value={inpCarName}
                     onChange={(e) => setInpCarName(e.target.value)}
                 />
+
+                {carList.map((car) => {
+                    return (
+                        <div key={`${car.marka}-${car.model}`} className="border rounded p-2 mb-2">
+                            {car.marka} {car.model}
+                        </div>
+                    );
+                })}
             </div>
-        )
+        );
     }
 
-    useEffect(() => {
-        //pobiera wszystkie modele i zdjęcia 
-        async function fetchCarList() {
-            const response = await fetch("distinctModels.php");
-            const data = await response.json();
-            setCarList(data);
-        }
-        //pobiera modele i zdjęcia na podstawie parametrów w input i select
-        async function fetchCarListByParameters() {
-            const sendParamsToPhp = async () => {
-                const toSend = await fetch("modelsByParams.php", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        name: inpCarName,
-                        brand: selectCarBrand
-                    })
-                });
-            }
-            sendParamsToPhp();
-            const response = await fetch("modelsByParams.php");
-            const data = await response.json();
-            setCarList(data);
-        }
-        if(fieldEmpty == true){ //pola puste - pobieramy wszystkie modele
-            fetchCarList();
-        } else { //pole nie jest puste - pobieramy modele na podstawie parametrów w input i select
-            fetchCarListByParameters();
-        }
-    }, [fieldEmpty]);
-        
     return (
         <div className="bg-light min-vh-100">
             <Navbar />
@@ -94,15 +123,10 @@ export default function ComparePage() {
                                         type="button"
                                         className="w-100 h-100 border-0 bg-transparent"
                                         style={{ padding: "16px" }}
-                                        onClick={openCarList}
+                                        onClick={() => setShowCarList(true)}
                                     >
                                         <div className="border rounded-3 p-3 h-100 d-flex flex-column justify-content-center">
-                                            <div
-                                                style={{
-                                                    fontSize: "32px",
-                                                    lineHeight: "1",
-                                                }}
-                                            >
+                                            <div style={{ fontSize: "32px", lineHeight: "1" }}>
                                                 +
                                             </div>
 
@@ -115,6 +139,8 @@ export default function ComparePage() {
                                             </div>
                                         </div>
                                     </button>
+
+                                    {showCarList && openCarList()}
                                 </th>
                             </tr>
                         </thead>
