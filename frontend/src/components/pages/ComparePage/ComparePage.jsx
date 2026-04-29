@@ -8,6 +8,7 @@ export default function ComparePage() {
     const [inpCarName, setInpCarName] = useState("");
     const [selectCarBrand, setSelectCarBrand] = useState("");
     const fieldEmpty = inpCarName === "" && selectCarBrand === ""; //true gdy pole wyszukiwania jest puste, a marka nie jest wybrana
+    const [carList, setCarList] = useState([]);
     function openCarList(){
         return(
             <div>
@@ -32,13 +33,30 @@ export default function ComparePage() {
     }
 
     useEffect(() => {
-        //funkcja pobiera wszystkie modele i zdjęcia - uruchamia się gdy pole wyszukiwania jest puste, a marka nie jest wybrana
+        //pobiera wszystkie modele i zdjęcia 
         async function fetchCarList() {
             const response = await fetch("distinctModels.php");
             const data = await response.json();
+            setCarList(data);
         }
+        //pobiera modele i zdjęcia na podstawie parametrów w input i select
         async function fetchCarListByParameters() {
-
+            const sendParamsToPhp = async () => {
+                const toSend = await fetch("modelsByParams.php", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        name: inpCarName,
+                        brand: selectCarBrand
+                    })
+                });
+            }
+            sendParamsToPhp();
+            const response = await fetch("modelsByParams.php");
+            const data = await response.json();
+            setCarList(data);
         }
         if(fieldEmpty == true){ //pola puste - pobieramy wszystkie modele
             fetchCarList();
@@ -47,10 +65,6 @@ export default function ComparePage() {
         }
     }, [fieldEmpty]);
         
-
-
-    
-    
     return (
         <div className="bg-light min-vh-100">
             <Navbar />
