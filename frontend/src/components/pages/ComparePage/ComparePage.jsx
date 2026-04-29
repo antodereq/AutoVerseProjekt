@@ -1,9 +1,56 @@
 // src/components/pages/ComparePage/ComparePage.jsx
+import { useEffect, useState } from "react";
 import Navbar from "../../universal/Navbar.jsx";
 
 const MAX_SLOTS = 9;
 
 export default function ComparePage() {
+    const [inpCarName, setInpCarName] = useState("");
+    const [selectCarBrand, setSelectCarBrand] = useState("");
+    const fieldEmpty = inpCarName === "" && selectCarBrand === ""; //true gdy pole wyszukiwania jest puste, a marka nie jest wybrana
+    function openCarList(){
+        return(
+            <div>
+                <select 
+                    className="form-select mb-3"
+                    id="car-brand-select"
+                    value={selectCarBrand}
+                    onChange={(e) => setSelectCarBrand(e.target.value)}
+                >
+                    <option value="">Wybierz markę...</option>
+                </select>
+                <input 
+                    type="text" 
+                    placeholder="Wyszukaj samochód..." 
+                    className="form-control mb-3" 
+                    id="car-search-input"
+                    value={inpCarName}
+                    onChange={(e) => setInpCarName(e.target.value)}
+                />
+            </div>
+        )
+    }
+
+    useEffect(() => {
+        //funkcja pobiera wszystkie modele i zdjęcia - uruchamia się gdy pole wyszukiwania jest puste, a marka nie jest wybrana
+        async function fetchCarList() {
+            const response = await fetch("distinctModels.php");
+            const data = await response.json();
+        }
+        async function fetchCarListByParameters() {
+
+        }
+        if(fieldEmpty == true){ //pola puste - pobieramy wszystkie modele
+            fetchCarList();
+        } else { //pole nie jest puste - pobieramy modele na podstawie parametrów w input i select
+            fetchCarListByParameters();
+        }
+    }, [fieldEmpty]);
+        
+
+
+    
+    
     return (
         <div className="bg-light min-vh-100">
             <Navbar />
@@ -33,6 +80,7 @@ export default function ComparePage() {
                                         type="button"
                                         className="w-100 h-100 border-0 bg-transparent"
                                         style={{ padding: "16px" }}
+                                        onClick={openCarList}
                                     >
                                         <div className="border rounded-3 p-3 h-100 d-flex flex-column justify-content-center">
                                             <div

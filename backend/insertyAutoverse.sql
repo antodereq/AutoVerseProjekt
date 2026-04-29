@@ -1168,4 +1168,46 @@ WHERE
     (ma.nazwa = 'Nissan' AND mo.nazwa = '370Z' AND g.nazwa = 'Z34')
     ON DUPLICATE KEY UPDATE konfiguracja_id = VALUES(konfiguracja_id);
 
+    -- =========================
+-- ZDJĘCIA MODELI
+-- =========================
+
+INSERT INTO zdjecie_modelu (model_id, sciezka, opis)
+SELECT
+    mo.id,
+    'img/Nissan/modelCarImg/370ZImg.jpg',
+    'Nissan 370Z'
+FROM model mo
+JOIN marka ma ON ma.id = mo.marka_id
+WHERE ma.nazwa = 'Nissan' AND mo.nazwa = '370Z'
+ON DUPLICATE KEY UPDATE
+    sciezka = VALUES(sciezka),
+    opis = VALUES(opis);
+
+
+INSERT INTO zdjecie_modelu (model_id, sciezka, opis)
+SELECT
+    mo.id,
+    'img/Toyota/modelCarImg/86Img.jpg',
+    'Toyota 86 / GR 86'
+FROM model mo
+JOIN marka ma ON ma.id = mo.marka_id
+WHERE ma.nazwa = 'Toyota' AND mo.nazwa = '86'
+ON DUPLICATE KEY UPDATE
+    sciezka = VALUES(sciezka),
+    opis = VALUES(opis);
+
+
+INSERT INTO zdjecie_modelu (model_id, sciezka, opis)
+SELECT
+    mo.id,
+    'img/Hyundai/modelCarImg/genesisCoupeImg.jpg',
+    'Hyundai Genesis Coupe'
+FROM model mo
+JOIN marka ma ON ma.id = mo.marka_id
+WHERE ma.nazwa = 'Hyundai' AND mo.nazwa = 'Genesis coupe'
+ON DUPLICATE KEY UPDATE
+    sciezka = VALUES(sciezka),
+    opis = VALUES(opis);
+
 COMMIT;
