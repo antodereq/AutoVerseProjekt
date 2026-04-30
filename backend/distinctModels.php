@@ -2,6 +2,7 @@
     include("cors.php");
     include("dbConnect.php");
    $sql = "SELECT 
+            model.id as id,
             marka.nazwa AS marka, 
             model.nazwa AS model, 
             zdjecie_modelu.sciezka AS sciezka

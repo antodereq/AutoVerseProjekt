@@ -12,8 +12,8 @@ export default function ComparePage() {
     const [carList, setCarList] = useState([]);
     const [showCarList, setShowCarList] = useState(false);
 
-    const [engineList, setEngineList] = useState([]);
-    const [engine, setEngine] = useState("");
+    const [carID, setCarID] = useState(null);
+    const [carParameters, setCarParameters] = useState({});
 
     const fieldEmpty = inpCarName === "" && selectCarBrand === "";
 
@@ -90,7 +90,7 @@ export default function ComparePage() {
 
                 {carList.map((car) => {
                     return (
-                        <div key={`${car.marka}-${car.model}`} className="border rounded p-2 mb-2" onClick={() => openSpecPage}>
+                        <div key={`${car.marka}-${car.model}`} className="border rounded p-2 mb-2" onClick={() => fetchCarParams(car.id)}>
                             <div>{car.marka} {car.model}</div>
 
                             <div>
@@ -103,25 +103,56 @@ export default function ComparePage() {
                         </div>
                     );
                 })}
-                <div>
-                    
-                </div>
             </div>
         );
     }
-    function openSpecPage(){
+    async function fetchCarParams(id) {
+        const response = await fetch(`${API_URL}/getCarParams.php`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ carID: id }),
+        });
+
+        const text = await response.text();
+        const data = JSON.parse(text);
+
+        setCarID(id);
+        setCarParameters(data);
+    }
+    function renderSpecPage() {
+        if (!carParameters.silniki) return null;
+
         return (
             <div className="border rounded p-2 mb-2">
-                <select 
-                    className="form-select mb-3"
-                    id="car-engine-select"
-                    value={engine}
-                    onChange={(e) => setEngine(e.target.value)}
-                >
+                <select className="form-select mb-3">
                     <option value="">Wybierz silnik...</option>
+
+                    {carParameters.silniki.map((engine) => (
+                        <option key={engine.id} value={engine.id}>
+                            {engine.kod} {engine.pojemnosc_cm3} cm3
+                        </option>
+                    ))}
+                </select>
+                <select className="form-select mb-3">
+                    <option value="">Wybierz nadwozie...</option>
+                    {carParameters.nadwozia.map((nadwozie) => (
+                        <option key={nadwozie.id} value={nadwozie.id}>
+                            {nadwozie.nazwa}
+                        </option>
+                    ))}
+                </select>
+                <select className="form-select mb-3">
+                    <option value="">Wybierz napęd...</option>
+                    {carParameters.napedy.map((naped) => (
+                        <option key={naped.id} value={naped.id}>
+                            {naped.nazwa}
+                        </option>
+                    ))}
                 </select>
             </div>
-        )
+        );
     }
 
     return (
@@ -171,6 +202,7 @@ export default function ComparePage() {
                                     </button>
 
                                     {showCarList && openCarList()}
+                                    {renderSpecPage()}
                                 </th>
                             </tr>
                         </thead>

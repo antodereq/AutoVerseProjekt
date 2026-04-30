@@ -8,6 +8,7 @@ $name = $data['name'] ?? '';
 $brand = $data['brand'] ?? '';
 
 $sql = "SELECT 
+        model.id as id,
         marka.nazwa AS marka, 
         model.nazwa AS model, 
         zdjecie_modelu.sciezka AS sciezka
