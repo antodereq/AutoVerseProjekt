@@ -12,7 +12,7 @@ export default function ComparePage() {
     const [carList, setCarList] = useState([]);
     const [showCarList, setShowCarList] = useState(false);
 
-    const [carID, setCarID] = useState(null);
+    // const [carID, setCarID] = useState(null);
     const [carParameters, setCarParameters] = useState({});
 
     const fieldEmpty = inpCarName === "" && selectCarBrand === "";
@@ -118,7 +118,7 @@ export default function ComparePage() {
         const text = await response.text();
         const data = JSON.parse(text);
 
-        setCarID(id);
+        // setCarID(id);
         setCarParameters(data);
     }
     function renderSpecPage() {
@@ -126,7 +126,13 @@ export default function ComparePage() {
 
         return (
             <div className="border rounded p-2 mb-2">
-                <select className="form-select mb-3">
+
+                {/* SILNIK */}
+                <select
+                    className="form-select mb-3"
+                    defaultValue={getDefault(carParameters.silniki)}
+                    disabled={disableIfSingle(carParameters.silniki)}
+                >
                     <option value="">Wybierz silnik...</option>
 
                     {carParameters.silniki.map((engine) => (
@@ -135,25 +141,51 @@ export default function ComparePage() {
                         </option>
                     ))}
                 </select>
-                <select className="form-select mb-3">
+
+                {/* NADWOZIE */}
+                <select
+                    className="form-select mb-3"
+                    defaultValue={getDefault(carParameters.nadwozia)}
+                    disabled={disableIfSingle(carParameters.nadwozia)}
+                >
                     <option value="">Wybierz nadwozie...</option>
+
                     {carParameters.nadwozia.map((nadwozie) => (
                         <option key={nadwozie.id} value={nadwozie.id}>
                             {nadwozie.nazwa}
                         </option>
                     ))}
                 </select>
-                <select className="form-select mb-3">
+
+                {/* NAPĘD */}
+                <select
+                    className="form-select mb-3"
+                    defaultValue={getDefault(carParameters.napedy)}
+                    disabled={disableIfSingle(carParameters.napedy)}
+                >
                     <option value="">Wybierz napęd...</option>
+
                     {carParameters.napedy.map((naped) => (
                         <option key={naped.id} value={naped.id}>
                             {naped.nazwa}
                         </option>
                     ))}
                 </select>
+
             </div>
         );
     }
+    function getDefault(arr) {
+        if (arr.length === 1) {
+            return arr[0].id;
+        }
+        return "";
+    }
+
+    function disableIfSingle(arr) {
+        if(arr.length === 1){return true;}
+    }
+    
 
     return (
         <div className="bg-light min-vh-100">
