@@ -77,6 +77,21 @@ $stmt->bind_param("i", $carID);
 $stmt->execute();
 $response["nadwozia"] = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
+//roczniki
+$sql = "SELECT DISTINCT
+        konfiguracja.rok_od AS rok_od,
+        konfiguracja.rok_do AS rok_do
+    FROM konfiguracja
+    JOIN generacja_nadwozie ON konfiguracja.generacja_nadwozie_id = generacja_nadwozie.id
+    JOIN generacja ON generacja_nadwozie.generacja_id = generacja.id
+    WHERE generacja.model_id = ?
+    ORDER BY konfiguracja.rok_od";
+    
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $carID);
+$stmt->execute();
+$response["roczniki"] = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
 
 // silniki
 $sql = "SELECT DISTINCT
@@ -113,7 +128,10 @@ echo json_encode($response, JSON_UNESCAPED_UNICODE);
 //   "marka": "Hyundai",
 //   "model": "Genesis Coupe",
 //   "napedy": [
-//     { "id": 2, "nazwa": "RWD" }
+//     { 
+//       "id": 2, 
+//       "nazwa": "RWD" 
+//     }
 //   ],
 //   "skrzynie": [
 //     { "id": 1, "nazwa": "manual" },

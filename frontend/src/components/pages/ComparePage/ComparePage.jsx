@@ -123,9 +123,39 @@ export default function ComparePage() {
     }
     function renderSpecPage() {
         if (!carParameters.silniki) return null;
+        function GetYearsTab(years){
+            if (years.length === 0) {
+                return [];
+            }
+            let yearsTab = [];
+            for(let i = 0; i <= (years.length - 1); i++){               //wykona sie np. dwa razy, bo hyundai bk1 2008-2012 oraz bk2 2013-2016
+                let yearSpan = `${years[i].rok_od} - ${years[i].rok_do}`
+                yearsTab.push(yearSpan);
+            }
+            console.log("years:", years);
+            console.log("yearsTab:", yearsTab);
+            return yearsTab; 
+        }
+        let yearsTab = GetYearsTab(carParameters.roczniki);
 
         return (
             <div className="border rounded p-2 mb-2">
+
+
+                {/* ROCZNIK */}
+                <select className="form-select mb-3">
+                    <option value="">Wybierz rocznik...</option>
+
+                    {yearsTab.map((year, index) => {
+                        return (
+                            <option key={index} value={year}>
+                                {year}
+                            </option>
+                        )
+                    })}
+                    
+                    
+                </select>
 
                 {/* SILNIK */}
                 <select
@@ -183,8 +213,13 @@ export default function ComparePage() {
     }
 
     function disableIfSingle(arr) {
-        if(arr.length === 1){return true;}
+        if(arr.length === 1)
+        {
+            return true;
+        }
+        return false;
     }
+    
     
 
     return (
