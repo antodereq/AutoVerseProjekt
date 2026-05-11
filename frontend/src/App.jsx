@@ -3,7 +3,9 @@ import { Routes, Route } from "react-router-dom";
 import StartPage from "./components/pages/StartPage/StartPage.jsx";
 import RecommenderPage from "./components/pages/RecommenderPage/RecommenderPage.jsx";
 import ComparePage from "./components/pages/ComparePage/ComparePage.jsx"; // NOWE
-
+export const metadata = {
+  title: "AutoVerse",
+};
 export default function App() {
     return (
         <Routes>
