@@ -136,6 +136,66 @@ $stmt->execute();
 $response["silniki"] = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
 
+// konfiguracje
+$sql = "SELECT DISTINCT
+        konfiguracja.id AS konfiguracja_id,
+
+        generacja.id AS generacja_id,
+        generacja.nazwa AS generacja,
+        generacja.rok_od AS gen_od,
+        generacja.rok_do AS gen_do,
+
+        konfiguracja.rok_od AS rok_od,
+        konfiguracja.rok_do AS rok_do,
+
+        silnik.id AS silnik_id,
+        silnik.kod AS silnik_kod,
+        silnik.nazwa_handlowa AS silnik_nazwa,
+        silnik.pojemnosc_cm3 AS pojemnosc_cm3,
+        silnik.liczba_cylindrow AS liczba_cylindrow,
+        uklad_cylindrow.nazwa AS uklad_cylindrow,
+        typ_paliwa.nazwa AS typ_paliwa,
+        doladowanie.nazwa AS doladowanie,
+
+        typ_nadwozia.id AS nadwozie_id,
+        typ_nadwozia.nazwa AS nadwozie,
+
+        naped.id AS naped_id,
+        naped.nazwa AS naped,
+
+        skrzynia.id AS skrzynia_id,
+        skrzynia.nazwa AS skrzynia,
+
+        konfiguracja.nazwa_wersji,
+        konfiguracja.ilosc_biegow,
+        konfiguracja.moc_km,
+        konfiguracja.moment_nm,
+        konfiguracja.przyspieszenie_0_100,
+        konfiguracja.predkosc_max,
+        konfiguracja.spalanie_srednie,
+        konfiguracja.spalanie_miasto,
+        konfiguracja.spalanie_trasa,
+        konfiguracja.masa_wlasna_kg
+    FROM konfiguracja
+    JOIN generacja_nadwozie ON konfiguracja.generacja_nadwozie_id = generacja_nadwozie.id
+    JOIN generacja ON generacja_nadwozie.generacja_id = generacja.id
+    JOIN model ON generacja.model_id = model.id
+    JOIN silnik ON konfiguracja.silnik_id = silnik.id
+    JOIN typ_nadwozia ON generacja_nadwozie.typ_nadwozia_id = typ_nadwozia.id
+    JOIN naped ON konfiguracja.naped_id = naped.id
+    JOIN skrzynia ON konfiguracja.skrzynia_id = skrzynia.id
+    LEFT JOIN uklad_cylindrow ON silnik.uklad_cylindrow_id = uklad_cylindrow.id
+    JOIN typ_paliwa ON silnik.typ_paliwa_id = typ_paliwa.id
+    LEFT JOIN doladowanie ON silnik.doladowanie_id = doladowanie.id
+    WHERE model.id = ?
+    ORDER BY generacja.rok_od, konfiguracja.rok_od, silnik.pojemnosc_cm3
+";
+
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $carID);
+$stmt->execute();
+$response["konfiguracje"] = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
 echo json_encode($response, JSON_UNESCAPED_UNICODE);
 
 // DOSTANĘ:
