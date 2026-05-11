@@ -92,6 +92,21 @@ $stmt->bind_param("i", $carID);
 $stmt->execute();
 $response["roczniki"] = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
+//generacje
+$sql = "SELECT DISTINCT
+        generacja.id, 
+        generacja.nazwa AS generacja,
+        generacja.rok_od AS gen_od,
+        generacja.rok_do AS gen_do
+        FROM model
+        JOIN generacja ON model.id = generacja.model_id
+        WHERE model.id = ?
+        ORDER BY generacja.nazwa";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $carID);
+$stmt->execute();
+$response["generacje"] = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
 
 // silniki
 $sql = "SELECT DISTINCT

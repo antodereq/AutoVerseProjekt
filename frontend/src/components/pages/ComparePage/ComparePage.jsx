@@ -13,6 +13,7 @@ export default function ComparePage() {
     const [showCarList, setShowCarList] = useState(false);
     const [selectedCarId, setSelectedCarId] = useState(null);
     const [carParameters, setCarParameters] = useState({});
+    const [carGen, setCarGen] = useState("");
 
     const fieldEmpty = inpCarName === "" && selectCarBrand === "";
 
@@ -108,6 +109,7 @@ export default function ComparePage() {
         return false;
     }
 
+
     function renderFiltersOnCard(car) {
         if (selectedCarId !== car.id) {
             return null;
@@ -120,7 +122,7 @@ export default function ComparePage() {
         let yearsTab = getYearsTab(carParameters.roczniki);
 
         return (
-            <div className="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-75 rounded-3 p-3 d-flex align-items-center">
+            <div className="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-75 rounded-3 p-3 overflow-auto">
                 <button
                     type="button"
                     className="btn btn-sm btn-light position-absolute top-0 end-0 m-2 rounded-circle"
@@ -147,6 +149,20 @@ export default function ComparePage() {
                         {car.marka} {car.model}
                     </div>
 
+                    <select 
+                        className="form-select form-select-sm mb-2"
+                        defaultValue={getDefault(carParameters.generacje)}
+                        disabled={disableIfSingle(carParameters.generacje)}
+                        onChange={(e) => setCarGen(e.target.value)}
+                    >
+                        <option value="">Wybierz generację...</option>
+                        {carParameters.generacje.map((gen) => {
+                            return(
+                                <option key={gen.id} value={gen.id}>{gen.generacja}</option>
+                            )
+                        })}
+                    </select>
+                    
                     <select className="form-select form-select-sm mb-2">
                         <option value="">Wybierz rocznik...</option>
 
@@ -214,6 +230,13 @@ export default function ComparePage() {
                             </option>
                         ))}
                     </select>
+
+                    <button
+                        type="button"
+                        className="btn btn-warning btn-sm w-100 mt-3 fw-semibold"
+                    >
+                        Dodaj do porównania
+                    </button>
                 </div>
             </div>
         );
