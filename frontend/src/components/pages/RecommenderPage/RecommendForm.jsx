@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 
-export default function RecommendForm({ onRecommend }) {
+export default function RecommendForm({ onRecommend, filters }) {
+    filters = filters || {};
     const [budgetMin, setBudgetMin] = useState("");
     const [budgetMax, setBudgetMax] = useState("");
     const [usageType, setUsageType] = useState("");
@@ -22,6 +23,18 @@ export default function RecommendForm({ onRecommend }) {
     const [avgConsumptionMax, setAvgConsumptionMax] = useState("");
     const [yearFrom, setYearFrom] = useState("");
     const [yearTo, setYearTo] = useState("");
+
+    const brandOptions = filters.brands || [];
+    const modelOptions = filters.models || [];
+    const bodyTypeOptions = filters.bodyTypes || [];
+    const transmissionOptions = filters.transmissions || [];
+    const driveTypeOptions = (filters.driveTypes || []).map((value) => ({
+        value,
+        label: value.toUpperCase()
+    }));
+    const fuelTypeOptions = filters.fuelTypes || [];
+    const engineLayoutOptions = filters.engineLayouts || [];
+    const countryOptions = filters.countries || [];
 
     function toggleInArray(currentArray, value) {
         if (currentArray.includes(value)) {
@@ -96,13 +109,15 @@ export default function RecommendForm({ onRecommend }) {
                         <label className="form-label">Marka (opcjonalnie)</label>
                         <select
                             className="form-select"
-                            value={transmission}
-                            onChange={(e) => setTransmission(e.target.value)}
+                            value={brand}
+                            onChange={(e) => setBrand(e.target.value)}
                         >
                             <option value="">--Obojętnie--</option>
-                            <option value="BMW">BMW</option>
-                            <option value="Hyundai">Hyundai</option>
-                            <option value="Nissan">Nissan</option>
+                            {brandOptions.map((brandOption) => (
+                                <option key={brandOption} value={brandOption}>
+                                    {brandOption}
+                                </option>
+                            ))}
                         </select>
                     </div>
 
@@ -113,9 +128,15 @@ export default function RecommendForm({ onRecommend }) {
                             type="text"
                             className="form-control"
                             placeholder="np. Supra, MX-5..."
+                            list="model-options"
                             value={model}
                             onChange={(e) => setModel(e.target.value)}
                         />
+                        <datalist id="model-options">
+                            {modelOptions.map((item) => (
+                                <option key={`${item.brand}-${item.name}`} value={item.name} />
+                            ))}
+                        </datalist>
                     </div>
 
                     {/* Nadwozie */}
@@ -123,7 +144,7 @@ export default function RecommendForm({ onRecommend }) {
                         <label className="form-label">Preferowane nadwozie (opcjonalnie)</label>
 
                         <div className="d-flex flex-wrap gap-2 small">
-                            {["hatchback", "sedan", "kombi", "coupe", "suv", "roadster"].map((type) => (
+                            {bodyTypeOptions.map((type) => (
                                 <div className="form-check form-check-inline" key={type}>
                                     <input
                                         className="form-check-input"
@@ -133,7 +154,7 @@ export default function RecommendForm({ onRecommend }) {
                                         id={"body-" + type}
                                     />
                                     <label className="form-check-label" htmlFor={"body-" + type}>
-                                        {type.toUpperCase()}
+                                        {type.charAt(0).toUpperCase() + type.slice(1).toLowerCase()}
                                     </label>
                                 </div>
                             ))}
@@ -149,8 +170,11 @@ export default function RecommendForm({ onRecommend }) {
                             onChange={(e) => setTransmission(e.target.value)}
                         >
                             <option value="any">Obojętne</option>
-                            <option value="manual">Manual</option>
-                            <option value="automat">Automat</option>
+                            {transmissionOptions.map((option) => (
+                                <option key={option} value={option}>
+                                    {option}
+                                </option>
+                            ))}
                         </select>
                     </div>
 
@@ -159,11 +183,7 @@ export default function RecommendForm({ onRecommend }) {
                         <label className="form-label">Napęd (możesz zaznaczyć wiele)</label>
 
                         <div className="d-flex flex-wrap gap-2 small">
-                            {[
-                                { value: "fwd", label: "FWD" },
-                                { value: "rwd", label: "RWD" },
-                                { value: "awd", label: "AWD" }
-                            ].map((opt) => (
+                            {driveTypeOptions.map((opt) => (
                                 <div className="form-check form-check-inline" key={opt.value}>
                                     <input
                                         className="form-check-input"
@@ -189,11 +209,11 @@ export default function RecommendForm({ onRecommend }) {
                             onChange={(e) => setFuelType(e.target.value)}
                         >
                             <option value="any">Obojętne</option>
-                            <option value="benzyna">Benzyna</option>
-                            <option value="diesel">Diesel</option>
-                            <option value="hybryda">Hybryda</option>
-                            <option value="elektryk">Elektryk</option>
-                            <option value="lpg">LPG</option>
+                            {fuelTypeOptions.map((option) => (
+                                <option key={option} value={option}>
+                                    {option}
+                                </option>
+                            ))}
                         </select>
                     </div>
 
@@ -205,13 +225,12 @@ export default function RecommendForm({ onRecommend }) {
                             value={engineLayout}
                             onChange={(e) => setEngineLayout(e.target.value)}
                         >
-                            <option value="">Obojętne</option>
-                            <option value="R">R</option>
-                            <option value="V">V</option>
-                            <option value="W">W</option>
-                            <option value="I">I</option>
-                            <option value="boxer">Boxer</option>
-                            <option value="wankel">Wankel</option>
+                            <option value="">Obojętnie</option>
+                            {engineLayoutOptions.map((layout) => (
+                                <option key={layout} value={layout}>
+                                    {layout}
+                                </option>
+                            ))}
                         </select>
                     </div>
 
@@ -307,22 +326,20 @@ export default function RecommendForm({ onRecommend }) {
                         <label className="form-label">Kraj pochodzenia (możesz zaznaczyć wiele)</label>
 
                         <div className="d-flex flex-wrap gap-2 small">
-                            {["Japonia", "Niemcy", "USA", "Włochy", "Francja", "Czechy", "Korea", "UK"].map(
-                                (country) => (
-                                    <div className="form-check form-check-inline" key={country}>
-                                        <input
-                                            className="form-check-input"
-                                            type="checkbox"
-                                            checked={countries.includes(country)}
-                                            onChange={() => setCountries(toggleInArray(countries, country))}
-                                            id={"country-" + country}
-                                        />
-                                        <label className="form-check-label" htmlFor={"country-" + country}>
-                                            {country}
-                                        </label>
-                                    </div>
-                                )
-                            )}
+                            {countryOptions.map((country) => (
+                                <div className="form-check form-check-inline" key={country}>
+                                    <input
+                                        className="form-check-input"
+                                        type="checkbox"
+                                        checked={countries.includes(country)}
+                                        onChange={() => setCountries(toggleInArray(countries, country))}
+                                        id={"country-" + country}
+                                    />
+                                    <label className="form-check-label" htmlFor={"country-" + country}>
+                                        {country}
+                                    </label>
+                                </div>
+                            ))}
                         </div>
                     </div>
 

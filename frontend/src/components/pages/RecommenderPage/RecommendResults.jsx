@@ -33,13 +33,13 @@ export default function RecommendResults({ preferences, results }) {
             </h5>
 
             <div className="d-flex flex-column gap-3">
-                {results.map(function (car) {
+                {results.map(function (car, index) {
                     const barWidth = car.matchScore + "%";
                     const title = car.brand + " " + car.model + " (" + car.yearFrom + "–" + car.yearTo + ")";
 
                     return (
                         <div
-                            key={car.id}
+                            key={`${car.brand}-${car.model}-${car.id}-${index}`}
                             className="card border-0 shadow-sm recommend-result-card"
                         >
                             {car.imageUrl && (
@@ -59,14 +59,14 @@ export default function RecommendResults({ preferences, results }) {
                                 </div>
 
                                 <div className="small text-muted mb-2">
-                                    {car.bodyType.toUpperCase()} • {car.power} KM •{" "}
+                                    {car.bodyType ? car.bodyType.charAt(0).toUpperCase() + car.bodyType.slice(1).toLowerCase() : 'Nieznany'} • {car.power} KM •{" "}
                                     {car.transmission === "manual" ? "Manual" : "Automat"} •{" "}
-                                    {car.drive.toUpperCase()} • {car.fuelType} • {car.country}
+                                    {car.drive ? car.drive.toUpperCase() : 'Nieznany'} • {car.fuelType || 'Nieznany'} • {car.country || 'Nieznany'}
                                 </div>
 
                                 <div className="small text-muted mb-2">
-                                    Poj. silnika: {car.engineCapacityCc} cm³ • Architektura: {car.engineLayout} •
-                                    Śr. spalanie: {car.avgConsumptionLPer100.toFixed(1)} l/100 km
+                                    Silnik: {car.engineName || 'Nieznany'} • Poj. silnika: {car.engineCapacityCc} cm³ • Architektura: {car.engineLayout || 'Nieznana'} •
+                                    Śr. spalanie: {(Number(car.avgConsumptionLPer100) || 0).toFixed(1)} l/100 km
                                 </div>
 
                                 <div className="small text-muted mb-2">
