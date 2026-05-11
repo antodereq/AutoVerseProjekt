@@ -14,7 +14,7 @@ export default function ComparePage() {
     const [selectedCarId, setSelectedCarId] = useState(null);
     const [carParameters, setCarParameters] = useState({});
 
-    const [filters, setFilters] = useState({
+    const [modelConfig, setModelConfig] = useState({
         generation: "",
         year: "",
         engine: "",
@@ -22,6 +22,10 @@ export default function ComparePage() {
         drive: "",
         gearbox: "",
     });
+
+    const [comparedCars, setComparedCars] = useState([]);
+    const [nextCompareID, setNextCompareID] = useState(1);
+    
 
     const fieldEmpty = inpCarName === "" && selectCarBrand === "";
 
@@ -79,7 +83,7 @@ export default function ComparePage() {
         setSelectedCarId(id);
         setCarParameters(data);
 
-        setFilters({
+        setModelConfig({
             generation: "",
             year: "",
             engine: "",
@@ -93,7 +97,7 @@ export default function ComparePage() {
         setSelectedCarId(null);
         setCarParameters({});
 
-        setFilters({
+        setModelConfig({
             generation: "",
             year: "",
             engine: "",
@@ -104,8 +108,8 @@ export default function ComparePage() {
     }
 
     function ChangeFilter(name, value) {
-        setFilters({
-            ...filters,
+        setModelConfig({
+            ...modelConfig,
             [name]: value,
         });
     }
@@ -116,38 +120,38 @@ export default function ComparePage() {
         }
 
         return configurations.filter((config) => {
-            if (skipFilter !== "generation" && filters.generation !== "") {
-                if (config.generacja_id != filters.generation) {
+            if (skipFilter !== "generation" && modelConfig.generation !== "") {
+                if (config.generacja_id != modelConfig.generation) {
                     return false;
                 }
             }
 
-            if (skipFilter !== "year" && filters.year !== "") {
-                if (!(Number(config.rok_od) <= Number(filters.year) && Number(config.rok_do) >= Number(filters.year))) {
+            if (skipFilter !== "year" && modelConfig.year !== "") {
+                if (!(Number(config.rok_od) <= Number(modelConfig.year) && Number(config.rok_do) >= Number(modelConfig.year))) {
                     return false;
                 }
             }
 
-            if (skipFilter !== "engine" && filters.engine !== "") {
-                if (config.silnik_id != filters.engine) {
+            if (skipFilter !== "engine" && modelConfig.engine !== "") {
+                if (config.silnik_id != modelConfig.engine) {
                     return false;
                 }
             }
 
-            if (skipFilter !== "body" && filters.body !== "") {
-                if (config.nadwozie_id != filters.body) {
+            if (skipFilter !== "body" && modelConfig.body !== "") {
+                if (config.nadwozie_id != modelConfig.body) {
                     return false;
                 }
             }
 
-            if (skipFilter !== "drive" && filters.drive !== "") {
-                if (config.naped_id != filters.drive) {
+            if (skipFilter !== "drive" && modelConfig.drive !== "") {
+                if (config.naped_id != modelConfig.drive) {
                     return false;
                 }
             }
 
-            if (skipFilter !== "gearbox" && filters.gearbox !== "") {
-                if (config.skrzynia_id != filters.gearbox) {
+            if (skipFilter !== "gearbox" && modelConfig.gearbox !== "") {
+                if (config.skrzynia_id != modelConfig.gearbox) {
                     return false;
                 }
             }
@@ -292,8 +296,60 @@ export default function ComparePage() {
 
         return gearboxes;
     }
+    function AddCarToTable() {
+        if (
+            modelConfig.body == "" ||
+            modelConfig.drive == "" ||
+            modelConfig.engine == "" ||
+            modelConfig.year == "" ||
+            modelConfig.generation == "" ||
+            modelConfig.gearbox == ""
+        ) {
+            return;
+        }
 
-    function renderFiltersOnCard(car) {
+        let selectedConfig = carParameters.konfiguracje.find((config) => {
+            let sameBody = modelConfig.body == config.nadwozie_id;
+            let sameDrive = modelConfig.drive == config.naped_id;
+            let sameEngine = modelConfig.engine == config.silnik_id;
+
+            let correctYear =
+                Number(modelConfig.year) >= Number(config.rok_od) &&
+                Number(modelConfig.year) <= Number(config.rok_do);
+
+            let sameGeneration = modelConfig.generation == config.generacja_id;
+            let sameGearbox = modelConfig.gearbox == config.skrzynia_id;
+
+            return (
+                sameBody &&
+                sameDrive &&
+                sameEngine &&
+                correctYear &&
+                sameGeneration &&
+                sameGearbox
+            );
+        });
+
+        if (!selectedConfig) {
+            return;
+        }
+
+        let carToCompare = {
+            ...selectedConfig,
+            compareID: nextCompareID,
+            marka: carParameters.marka,
+            model: carParameters.model,
+            selectedYear: modelConfig.year,
+        };
+
+        setComparedCars([...comparedCars, carToCompare]);
+        setNextCompareID(nextCompareID + 1);
+
+        closeOverlay();
+        setShowCarList(false);
+    }
+
+    function rendermodelConfigOnCard(car) {
         if (selectedCarId !== car.id) {
             return null;
         }
@@ -339,7 +395,7 @@ export default function ComparePage() {
 
                     <select
                         className="form-select form-select-sm mb-2"
-                        value={filters.generation}
+                        value={modelConfig.generation}
                         onChange={(e) => ChangeFilter("generation", e.target.value)}
                     >
                         <option value="">Wybierz generację...</option>
@@ -355,7 +411,7 @@ export default function ComparePage() {
 
                     <select
                         className="form-select form-select-sm mb-2"
-                        value={filters.year}
+                        value={modelConfig.year}
                         onChange={(e) => ChangeFilter("year", e.target.value)}
                     >
                         <option value="">Wybierz rocznik...</option>
@@ -371,7 +427,7 @@ export default function ComparePage() {
 
                     <select
                         className="form-select form-select-sm mb-2"
-                        value={filters.engine}
+                        value={modelConfig.engine}
                         onChange={(e) => ChangeFilter("engine", e.target.value)}
                     >
                         <option value="">Wybierz silnik...</option>
@@ -387,7 +443,7 @@ export default function ComparePage() {
 
                     <select
                         className="form-select form-select-sm mb-2"
-                        value={filters.body}
+                        value={modelConfig.body}
                         onChange={(e) => ChangeFilter("body", e.target.value)}
                     >
                         <option value="">Wybierz nadwozie...</option>
@@ -403,7 +459,7 @@ export default function ComparePage() {
 
                     <select
                         className="form-select form-select-sm mb-2"
-                        value={filters.drive}
+                        value={modelConfig.drive}
                         onChange={(e) => ChangeFilter("drive", e.target.value)}
                     >
                         <option value="">Wybierz napęd...</option>
@@ -419,7 +475,7 @@ export default function ComparePage() {
 
                     <select
                         className="form-select form-select-sm"
-                        value={filters.gearbox}
+                        value={modelConfig.gearbox}
                         onChange={(e) => ChangeFilter("gearbox", e.target.value)}
                     >
                         <option value="">Wybierz skrzynię...</option>
@@ -436,6 +492,7 @@ export default function ComparePage() {
                     <button
                         type="button"
                         className="btn btn-warning btn-sm w-100 mt-3 fw-semibold"
+                        onClick={AddCarToTable}
                     >
                         Dodaj do porównania
                     </button>
@@ -508,7 +565,7 @@ export default function ComparePage() {
                                         </div>
                                     </div>
 
-                                    {renderFiltersOnCard(car)}
+                                    {rendermodelConfigOnCard(car)}
                                 </div>
                             </div>
                         );
@@ -572,57 +629,266 @@ export default function ComparePage() {
                         <tbody>
                             <tr>
                                 <th scope="row">Marka</th>
-                                <td>—</td>
+
+                                {comparedCars.map((car) => {
+                                    return (
+                                        <td key={car.compareID}>
+                                            {car.marka}
+                                        </td>
+                                    );
+                                })}
                             </tr>
 
                             <tr>
                                 <th scope="row">Model</th>
-                                <td>—</td>
+
+                                {comparedCars.map((car) => {
+                                    return (
+                                        <td key={car.compareID}>
+                                            {car.model}
+                                        </td>
+                                    );
+                                })}
                             </tr>
 
                             <tr>
                                 <th scope="row">Generacja</th>
-                                <td>—</td>
+
+                                {comparedCars.map((car) => {
+                                    return (
+                                        <td key={car.compareID}>
+                                            {car.generacja}
+                                        </td>
+                                    );
+                                })}
+                            </tr>
+
+                            <tr>
+                                <th scope="row">Rocznik</th>
+
+                                {comparedCars.map((car) => {
+                                    return (
+                                        <td key={car.compareID}>
+                                            {car.selectedYear}
+                                        </td>
+                                    );
+                                })}
                             </tr>
 
                             <tr>
                                 <th scope="row">Lata produkcji</th>
-                                <td>—</td>
+
+                                {comparedCars.map((car) => {
+                                    return (
+                                        <td key={car.compareID}>
+                                            {car.rok_od} - {car.rok_do}
+                                        </td>
+                                    );
+                                })}
                             </tr>
 
                             <tr>
                                 <th scope="row">Silnik</th>
-                                <td>—</td>
+
+                                {comparedCars.map((car) => {
+                                    return (
+                                        <td key={car.compareID}>
+                                            {car.silnik_kod}
+                                        </td>
+                                    );
+                                })}
+                            </tr>
+
+                            <tr>
+                                <th scope="row">Nazwa silnika</th>
+
+                                {comparedCars.map((car) => {
+                                    return (
+                                        <td key={car.compareID}>
+                                            {car.silnik_nazwa}
+                                        </td>
+                                    );
+                                })}
+                            </tr>
+
+                            <tr>
+                                <th scope="row">Pojemność</th>
+
+                                {comparedCars.map((car) => {
+                                    return (
+                                        <td key={car.compareID}>
+                                            {car.pojemnosc_cm3} cm3
+                                        </td>
+                                    );
+                                })}
+                            </tr>
+
+                            <tr>
+                                <th scope="row">Liczba cylindrów</th>
+
+                                {comparedCars.map((car) => {
+                                    return (
+                                        <td key={car.compareID}>
+                                            {car.liczba_cylindrow}
+                                        </td>
+                                    );
+                                })}
+                            </tr>
+
+                            <tr>
+                                <th scope="row">Układ cylindrów</th>
+
+                                {comparedCars.map((car) => {
+                                    return (
+                                        <td key={car.compareID}>
+                                            {car.uklad_cylindrow}
+                                        </td>
+                                    );
+                                })}
                             </tr>
 
                             <tr>
                                 <th scope="row">Moc [KM]</th>
-                                <td>—</td>
+
+                                {comparedCars.map((car) => {
+                                    return (
+                                        <td key={car.compareID}>
+                                            {car.moc_km ?? "—"}
+                                        </td>
+                                    );
+                                })}
                             </tr>
 
                             <tr>
                                 <th scope="row">Moment [Nm]</th>
-                                <td>—</td>
+
+                                {comparedCars.map((car) => {
+                                    return (
+                                        <td key={car.compareID}>
+                                            {car.moment_nm ?? "—"}
+                                        </td>
+                                    );
+                                })}
                             </tr>
 
                             <tr>
                                 <th scope="row">Nadwozie</th>
-                                <td>—</td>
+
+                                {comparedCars.map((car) => {
+                                    return (
+                                        <td key={car.compareID}>
+                                            {car.nadwozie}
+                                        </td>
+                                    );
+                                })}
                             </tr>
 
                             <tr>
                                 <th scope="row">Napęd</th>
-                                <td>—</td>
+
+                                {comparedCars.map((car) => {
+                                    return (
+                                        <td key={car.compareID}>
+                                            {car.naped}
+                                        </td>
+                                    );
+                                })}
                             </tr>
 
                             <tr>
                                 <th scope="row">Skrzynia</th>
-                                <td>—</td>
+
+                                {comparedCars.map((car) => {
+                                    return (
+                                        <td key={car.compareID}>
+                                            {car.skrzynia}
+                                        </td>
+                                    );
+                                })}
+                            </tr>
+
+                            <tr>
+                                <th scope="row">Liczba biegów</th>
+
+                                {comparedCars.map((car) => {
+                                    return (
+                                        <td key={car.compareID}>
+                                            {car.ilosc_biegow ?? "—"}
+                                        </td>
+                                    );
+                                })}
                             </tr>
 
                             <tr>
                                 <th scope="row">Paliwo</th>
-                                <td>—</td>
+
+                                {comparedCars.map((car) => {
+                                    return (
+                                        <td key={car.compareID}>
+                                            {car.typ_paliwa}
+                                        </td>
+                                    );
+                                })}
+                            </tr>
+
+                            <tr>
+                                <th scope="row">Doładowanie</th>
+
+                                {comparedCars.map((car) => {
+                                    return (
+                                        <td key={car.compareID}>
+                                            {car.doladowanie ?? "—"}
+                                        </td>
+                                    );
+                                })}
+                            </tr>
+
+                            <tr>
+                                <th scope="row">0-100 km/h</th>
+
+                                {comparedCars.map((car) => {
+                                    return (
+                                        <td key={car.compareID}>
+                                            {car.przyspieszenie_0_100 ?? "—"}
+                                        </td>
+                                    );
+                                })}
+                            </tr>
+
+                            <tr>
+                                <th scope="row">Prędkość maks.</th>
+
+                                {comparedCars.map((car) => {
+                                    return (
+                                        <td key={car.compareID}>
+                                            {car.predkosc_max ?? "—"}
+                                        </td>
+                                    );
+                                })}
+                            </tr>
+
+                            <tr>
+                                <th scope="row">Spalanie średnie</th>
+
+                                {comparedCars.map((car) => {
+                                    return (
+                                        <td key={car.compareID}>
+                                            {car.spalanie_srednie ?? "—"}
+                                        </td>
+                                    );
+                                })}
+                            </tr>
+
+                            <tr>
+                                <th scope="row">Masa własna</th>
+
+                                {comparedCars.map((car) => {
+                                    return (
+                                        <td key={car.compareID}>
+                                            {car.masa_wlasna_kg ?? "—"}
+                                        </td>
+                                    );
+                                })}
                             </tr>
                         </tbody>
                     </table>
