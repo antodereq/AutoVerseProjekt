@@ -7,174 +7,330 @@ import RecommendResults from "./RecommendResults.jsx";
 import { API_URL } from "../../../config/api.js";
 import "../../../styles/RecommenderPage.css";
 
-function calculateMatchScore(preferences, car) {
+function normalizeString(value) {
+    return String(value || "").trim().toLowerCase();
+}
 
-    let score = 0;
-    let maxScore = 0;
-
-    // Najpierw sprawdź, czy samochód spełnia wszystkie wybrane kryteria
-    // Jeśli nie, zwróć 0 (samochód nie jest brany pod uwagę)
-
-    // Marka - jeśli wybrana, musi pasować
-    if (preferences.brand !== "") {
-        const prefBrand = preferences.brand.trim().toLowerCase();
-        const carBrand = car.brand.trim().toLowerCase();
-        if (carBrand.indexOf(prefBrand) === -1) {
-            return 0;
-        }
+function buildApiUrl(endpoint) {
+    const path = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+    if (!API_URL) {
+        return path;
     }
+    return API_URL.replace(/\/$/, "") + path;
+}
 
-    // Model - jeśli wybrany, musi pasować
-    if (preferences.model !== "") {
-        const prefModel = preferences.model.trim().toLowerCase();
-        const carModel = car.model.trim().toLowerCase();
-        if (carModel.indexOf(prefModel) === -1) {
-            return 0;
-        }
-    }
+function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+}
 
-    // Napęd - jeśli wybrane, przynajmniej jeden musi pasować
-    if (preferences.driveTypes.length > 0) {
-        const hasMatchingDrive = preferences.driveTypes.some(drive =>
-            car.drive && car.drive.toLowerCase() === drive.toLowerCase()
-        );
-        if (!hasMatchingDrive) {
-            return 0;
-        }
-    }
+function scoreSoftRange(value, min, max) {
+    const actual = Number(value);
+    const lower = Number(min);
+    const upper = Number(max);
 
-    // Kraj - jeśli wybrane, przynajmniej jeden musi pasować
-    if (preferences.countries.length > 0) {
-        const hasMatchingCountry = preferences.countries.some(country =>
-            car.country && car.country.toLowerCase() === country.toLowerCase()
-        );
-        if (!hasMatchingCountry) {
-            return 0;
-        }
-    }
-
-    // Pojemność - jeśli zakres wybrany, musi pasować
-    if (preferences.engineCapacityMin !== "" || preferences.engineCapacityMax !== "") {
-        const minCc = preferences.engineCapacityMin !== "" ? Number(preferences.engineCapacityMin) : 0;
-        const maxCc = preferences.engineCapacityMax !== "" ? Number(preferences.engineCapacityMax) : 99999;
-        if (car.engineCapacityCc < minCc || car.engineCapacityCc > maxCc) {
-            return 0;
-        }
-    }
-
-    // Moc - jeśli zakres wybrany, musi pasować
-    if (preferences.powerMin !== "" || preferences.powerMax !== "") {
-        const minHp = preferences.powerMin !== "" ? Number(preferences.powerMin) : 0;
-        const maxHp = preferences.powerMax !== "" ? Number(preferences.powerMax) : 99999;
-        if (car.power < minHp || car.power > maxHp) {
-            return 0;
-        }
-    }
-
-    // Spalanie - jeśli max wybrane, musi pasować
-    if (preferences.avgConsumptionMax !== "") {
-        const maxCons = Number(preferences.avgConsumptionMax);
-        if (car.avgConsumptionLPer100 > maxCons) {
-            return 0;
-        }
-    }
-
-    // Roczniki - jeśli zakres wybrany, musi pasować
-    if (preferences.yearFrom !== "" || preferences.yearTo !== "") {
-        const prefFrom = preferences.yearFrom !== "" ? Number(preferences.yearFrom) : 1900;
-        const prefTo = preferences.yearTo !== "" ? Number(preferences.yearTo) : 2100;
-        const carFrom = car.yearFrom;
-        const carTo = car.yearTo;
-        const overlaps = carTo >= prefFrom && carFrom <= prefTo;
-        if (!overlaps) {
-            return 0;
-        }
-    }
-
-    // Skrzynia biegów - jeśli wybrana, musi pasować
-    if (preferences.transmission !== "any") {
-        const prefTransmission = preferences.transmission.trim().toLowerCase();
-        const carTransmission = car.transmission ? car.transmission.trim().toLowerCase() : "";
-        if (carTransmission !== prefTransmission) {
-            return 0;
-        }
-    }
-
-    // Samochód przeszedł wszystkie filtry, teraz licz score
-
-    // Budżet
-    maxScore += 25;
-    if (preferences.budgetMin !== "" && preferences.budgetMax !== "") {
-        const prefMin = Number(preferences.budgetMin);
-        const prefMax = Number(preferences.budgetMax);
-        if (car.priceMax >= prefMin && car.priceMin <= prefMax) {
-            score += 25;
-        } else {
-            const carCenter = (car.priceMin + car.priceMax) / 2;
-            if (carCenter >= prefMin * 0.8 && carCenter <= prefMax * 1.2) {
-                score += 15;
-            }
-        }
-    } else {
-        score += 10;
-    }
-
-    // Styl jazdy
-    maxScore += 20;
-    if (preferences.usageType !== "") {
-        if (car.usageTags.includes(preferences.usageType)) {
-            score += 20;
-        }
-    } else {
-        score += 10;
-    }
-
-    // Nadwozie
-    maxScore += 15;
-    if (preferences.bodyTypes.length > 0) {
-        const matchesBody = preferences.bodyTypes.some(body =>
-            car.bodyType && car.bodyType.toLowerCase() === body.toLowerCase()
-        );
-        if (matchesBody) {
-            score += 15;
-        }
-    } else {
-        score += 8;
-    }
-
-    // Skrzynia
-    maxScore += 15;
-    if (preferences.transmission !== "any") {
-        if (car.transmission && car.transmission.toLowerCase() === preferences.transmission.toLowerCase()) {
-            score += 15;
-        }
-    } else {
-        score += 10;
-    }
-
-    // Paliwo
-    maxScore += 10;
-    if (preferences.fuelType !== "any") {
-        if (car.fuelType && car.fuelType.toLowerCase() === preferences.fuelType.toLowerCase()) {
-            score += 10;
-        }
-    } else {
-        score += 7;
-    }
-
-    // Architektura silnika
-    if (preferences.engineLayout !== "") {
-        maxScore += 5;
-        if (car.engineLayout && car.engineLayout.toLowerCase() === preferences.engineLayout.toLowerCase()) {
-            score += 5;
-        }
-    }
-
-    if (maxScore === 0) {
+    if (Number.isNaN(actual)) {
         return 0;
     }
 
-    return Math.round((score / maxScore) * 100);
+    if (!Number.isNaN(lower) && !Number.isNaN(upper)) {
+        if (actual >= lower && actual <= upper) {
+            return 1;
+        }
+
+        const range = Math.max(upper - lower, 1);
+        const delta = actual < lower ? lower - actual : actual - upper;
+        const tolerance = Math.max(range * 0.6, range * 0.25, 5);
+        return clamp(1 - delta / tolerance, 0, 1);
+    }
+
+    if (!Number.isNaN(lower)) {
+        if (actual >= lower) {
+            return 1;
+        }
+        const delta = lower - actual;
+        const tolerance = Math.max(lower * 0.2, 10);
+        return clamp(1 - delta / tolerance, 0, 1);
+    }
+
+    if (!Number.isNaN(upper)) {
+        if (actual <= upper) {
+            return 1;
+        }
+        const delta = actual - upper;
+        const tolerance = Math.max(upper * 0.2, 5);
+        return clamp(1 - delta / tolerance, 0, 1);
+    }
+
+    return 0;
+}
+
+function scoreYearRange(car, yearFrom, yearTo) {
+    const prefFrom = Number(yearFrom);
+    const prefTo = Number(yearTo);
+    const carFrom = Number(car.yearFrom);
+    const carTo = Number(car.yearTo);
+
+    if (Number.isNaN(carFrom) || Number.isNaN(carTo)) {
+        return 0;
+    }
+
+    const hasPrefFrom = !Number.isNaN(prefFrom);
+    const hasPrefTo = !Number.isNaN(prefTo);
+
+    if (!hasPrefFrom && !hasPrefTo) {
+        return 0;
+    }
+
+    const effectiveFrom = hasPrefFrom ? prefFrom : carFrom;
+    const effectiveTo = hasPrefTo ? prefTo : carTo;
+
+    if (carTo >= effectiveFrom && carFrom <= effectiveTo) {
+        return 1;
+    }
+
+    const gap = carTo < effectiveFrom ? effectiveFrom - carTo : carFrom - effectiveTo;
+    const prefRange = Math.max((effectiveTo - effectiveFrom), 5);
+    const tolerance = Math.max(prefRange * 0.6, 5);
+    return clamp(1 - gap / tolerance, 0, 1);
+}
+
+function scoreLowerIsBetter(value, maxValue) {
+    const actual = Number(value);
+    const max = Number(maxValue);
+    if (Number.isNaN(actual) || Number.isNaN(max)) {
+        return 0;
+    }
+
+    if (actual <= max) {
+        return 1;
+    }
+
+    const delta = actual - max;
+    const tolerance = Math.max(max * 0.2, 2);
+    return clamp(1 - delta / tolerance, 0, 1);
+}
+
+function buildExplanation(scoreDetails, totalScore) {
+    const notes = [];
+
+    if (scoreDetails.price !== undefined) {
+        if (scoreDetails.price >= 0.9) {
+            notes.push("Cena jest bardzo dobrze dopasowana");
+        } else if (scoreDetails.price >= 0.6) {
+            notes.push("Cena jest bliska oczekiwanej");
+        } else {
+            notes.push("Cena odbiega od preferowanego zakresu");
+        }
+    }
+
+    if (scoreDetails.drive !== undefined) {
+        notes.push(scoreDetails.drive ? "Wybrany napęd pasuje" : "Napęd różni się od preferowanego");
+    }
+
+    if (scoreDetails.transmission !== undefined) {
+        notes.push(scoreDetails.transmission ? "Skrzynia biegów odpowiada preferencji" : "Skrzynia biegów jest inna niż wybrana");
+    }
+
+    if (scoreDetails.body !== undefined) {
+        notes.push(scoreDetails.body ? "Typ nadwozia pasuje" : "Inny typ nadwozia niż preferowany");
+    }
+
+    if (scoreDetails.power !== undefined) {
+        if (scoreDetails.power >= 0.9) {
+            notes.push("Moc jest bardzo zbliżona do oczekiwanej");
+        } else if (scoreDetails.power >= 0.5) {
+            notes.push("Moc mieści się w przybliżonym zakresie");
+        } else {
+            notes.push("Moc znacząco różni się od oczekiwań");
+        }
+    }
+
+    if (scoreDetails.year !== undefined) {
+        if (scoreDetails.year >= 0.9) {
+            notes.push("Rocznik bardzo dobrze pasuje do preferencji");
+        } else if (scoreDetails.year >= 0.5) {
+            notes.push("Rocznik jest bliski preferowanemu zakresowi");
+        } else {
+            notes.push("Rocznik jest wyraźnie poza preferowanym przedziałem");
+        }
+    }
+
+    if (scoreDetails.fuel !== undefined) {
+        notes.push(scoreDetails.fuel ? "Rodzaj paliwa jest zgodny" : "Rodzaj paliwa jest inny niż preferowany");
+    }
+
+    if (scoreDetails.architecture !== undefined) {
+        notes.push(scoreDetails.architecture ? "Architektura silnika pasuje" : "Architektura silnika jest inna niż wybrana");
+    }
+
+    if (scoreDetails.capacity !== undefined) {
+        if (scoreDetails.capacity >= 0.9) {
+            notes.push("Pojemność silnika jest bardzo bliska preferowanej");
+        } else if (scoreDetails.capacity >= 0.5) {
+            notes.push("Pojemność silnika mieści się w przybliżonym zakresie");
+        } else {
+            notes.push("Pojemność silnika znacząco odbiega od oczekiwań");
+        }
+    }
+
+    const summary = totalScore >= 85
+        ? "Bardzo dobre dopasowanie." 
+        : totalScore >= 65
+            ? "Dobre dopasowanie." 
+            : totalScore >= 40
+                ? "Średnie dopasowanie." 
+                : "Niskie dopasowanie.";
+
+    return [summary, ...notes.slice(0, 3)].join(" ");
+}
+
+function calculateMatchScore(preferences, car) {
+    // Filtry, które wykluczają ofertę
+    if (preferences.brand !== "") {
+        const prefBrand = normalizeString(preferences.brand);
+        const carBrand = normalizeString(car.brand);
+        if (!carBrand.includes(prefBrand)) {
+            return { score: 0, explanation: "Marka nie pasuje do wybranej preferencji.", passed: false };
+        }
+    }
+
+    if (preferences.model !== "") {
+        const prefModel = normalizeString(preferences.model);
+        const carModel = normalizeString(car.model);
+        if (!carModel.includes(prefModel)) {
+            return { score: 0, explanation: "Model nie pasuje do wybranej preferencji.", passed: false };
+        }
+    }
+
+    if (preferences.countries.length > 0) {
+        const hasMatchingCountry = preferences.countries.some(country =>
+            normalizeString(country) === normalizeString(car.country)
+        );
+        if (!hasMatchingCountry) {
+            return { score: 0, explanation: "Kraj pochodzenia nie znajduje się w wybranych opcjach.", passed: false };
+        }
+    }
+
+    if (preferences.driveTypes.length > 0) {
+        const hasMatchingDrive = preferences.driveTypes.some(drive =>
+            normalizeString(drive) === normalizeString(car.drive)
+        );
+        if (!hasMatchingDrive) {
+            return { score: 0, explanation: "Napęd nie pasuje do wybranych preferencji.", passed: false };
+        }
+    }
+
+    if (preferences.transmission !== "any") {
+        if (normalizeString(car.transmission) !== normalizeString(preferences.transmission)) {
+            return { score: 0, explanation: "Skrzynia biegów nie pasuje do wybranej preferencji.", passed: false };
+        }
+    }
+
+    if (preferences.bodyTypes.length > 0) {
+        const hasMatchingBody = preferences.bodyTypes.some(body =>
+            normalizeString(body) === normalizeString(car.bodyType)
+        );
+        if (!hasMatchingBody) {
+            return { score: 0, explanation: "Typ nadwozia nie odpowiada wybranym preferencjom.", passed: false };
+        }
+    }
+
+    if (preferences.fuelType !== "any") {
+        if (normalizeString(car.fuelType) !== normalizeString(preferences.fuelType)) {
+            return { score: 0, explanation: "Rodzaj paliwa nie odpowiada wybranej preferencji.", passed: false };
+        }
+    }
+
+    if (preferences.engineLayout !== "") {
+        if (normalizeString(car.engineLayout) !== normalizeString(preferences.engineLayout)) {
+            return { score: 0, explanation: "Architektura silnika nie odpowiada wybranej preferencji.", passed: false };
+        }
+    }
+
+    const categories = [];
+
+    if (preferences.budgetMin !== "" || preferences.budgetMax !== "") {
+        const priceScore = scoreSoftRange(
+            (car.priceMin + car.priceMax) / 2,
+            preferences.budgetMin !== "" ? Number(preferences.budgetMin) : NaN,
+            preferences.budgetMax !== "" ? Number(preferences.budgetMax) : NaN
+        );
+        categories.push({ key: "price", score: priceScore, weight: 25 });
+    }
+
+    if (preferences.driveTypes.length > 0) {
+        categories.push({ key: "drive", score: 1, weight: 16 });
+    }
+
+    if (preferences.transmission !== "any") {
+        categories.push({ key: "transmission", score: 1, weight: 12 });
+    }
+
+    if (preferences.bodyTypes.length > 0) {
+        categories.push({ key: "body", score: 1, weight: 12 });
+    }
+
+    if (preferences.powerMin !== "" || preferences.powerMax !== "") {
+        const powerScore = scoreSoftRange(
+            car.power,
+            preferences.powerMin !== "" ? Number(preferences.powerMin) : NaN,
+            preferences.powerMax !== "" ? Number(preferences.powerMax) : NaN
+        );
+        categories.push({ key: "power", score: powerScore, weight: 15 });
+    }
+
+    if (preferences.yearFrom !== "" || preferences.yearTo !== "") {
+        const yearScore = scoreYearRange(car, preferences.yearFrom, preferences.yearTo);
+        categories.push({ key: "year", score: yearScore, weight: 8 });
+    }
+
+    if (preferences.avgConsumptionMax !== "") {
+        const consumptionScore = scoreLowerIsBetter(car.avgConsumptionLPer100, preferences.avgConsumptionMax);
+        categories.push({ key: "consumption", score: consumptionScore, weight: 6 });
+    }
+
+    if (preferences.fuelType !== "any") {
+        categories.push({ key: "fuel", score: 1, weight: 4 });
+    }
+
+    if (preferences.engineLayout !== "") {
+        categories.push({ key: "architecture", score: 1, weight: 4 });
+    }
+
+    if (preferences.engineCapacityMin !== "" || preferences.engineCapacityMax !== "") {
+        const capacityScore = scoreSoftRange(
+            car.engineCapacityCc,
+            preferences.engineCapacityMin !== "" ? Number(preferences.engineCapacityMin) : NaN,
+            preferences.engineCapacityMax !== "" ? Number(preferences.engineCapacityMax) : NaN
+        );
+        categories.push({ key: "capacity", score: capacityScore, weight: 4 });
+    }
+
+    const activeCategories = categories.filter((category) => category.weight > 0);
+    const totalWeight = activeCategories.reduce((sum, category) => sum + category.weight, 0);
+    const totalScore = activeCategories.reduce(
+        (sum, category) => sum + category.score * category.weight,
+        0
+    );
+
+    if (totalWeight === 0) {
+        return {
+            score: 100,
+            explanation: "Brak preferencji punktowanych – oferta spełnia wszystkie wybrane filtry.",
+            passed: true
+        };
+    }
+
+    const normalizedScore = Math.round((totalScore / totalWeight) * 100);
+    const scoreDetails = activeCategories.reduce((details, category) => {
+        details[category.key] = category.score;
+        return details;
+    }, {});
+
+    return {
+        score: normalizedScore,
+        explanation: buildExplanation(scoreDetails, normalizedScore)
+    };
 }
 
 export default function RecommenderPage() {
@@ -194,8 +350,8 @@ export default function RecommenderPage() {
         async function fetchData() {
             try {
                 const [carsResponse, filtersResponse] = await Promise.all([
-                    fetch(`${API_URL}/api/cars`),
-                    fetch(`${API_URL}/api/filters`)
+                    fetch(buildApiUrl("/cars")),
+                    fetch(buildApiUrl("/filters"))
                 ]);
 
                 if (!carsResponse.ok || !filtersResponse.ok) {
@@ -230,20 +386,22 @@ export default function RecommenderPage() {
 
             .map(function (car) {
 
-                const score = calculateMatchScore(
+                const { score, explanation, passed } = calculateMatchScore(
                     formValues,
                     car
                 );
 
                 return {
                     ...car,
-                    matchScore: score
+                    matchScore: score,
+                    matchExplanation: explanation,
+                    matchPassed: passed !== false
                 };
             })
 
             .filter(function (car) {
 
-                return car.matchScore > 0;
+                return car.matchPassed;
             })
 
             .sort(function (a, b) {

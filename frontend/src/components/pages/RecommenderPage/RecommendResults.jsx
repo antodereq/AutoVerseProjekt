@@ -68,7 +68,11 @@ export default function RecommendResults({ preferences, results }) {
                                     Silnik: {car.engineName || 'Nieznany'} • Poj. silnika: {car.engineCapacityCc} cm³ • Architektura: {car.engineLayout || 'Nieznana'} •
                                     Śr. spalanie: {(Number(car.avgConsumptionLPer100) || 0).toFixed(1)} l/100 km
                                 </div>
-
+                                {car.matchExplanation && (
+                                    <div className="small text-muted fst-italic mb-2">
+                                        {car.matchExplanation}
+                                    </div>
+                                )}
                                 <div className="small text-muted mb-2">
                                     Szacowany zakres cen:{" "}
                                     <strong>
