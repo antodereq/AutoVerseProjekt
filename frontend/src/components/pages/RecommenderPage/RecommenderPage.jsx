@@ -4,19 +4,11 @@ import React, { useState, useEffect } from "react";
 import Navbar from "../../universal/Navbar.jsx";
 import RecommendForm from "./RecommendForm.jsx";
 import RecommendResults from "./RecommendResults.jsx";
-import { API_URL } from "../../../config/api.js";
+import { buildApiUrl } from "../../../config/api.js";
 import "../../../styles/RecommenderPage.css";
 
 function normalizeString(value) {
     return String(value || "").trim().toLowerCase();
-}
-
-function buildApiUrl(endpoint) {
-    const path = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
-    if (!API_URL) {
-        return path;
-    }
-    return API_URL.replace(/\/$/, "") + path;
 }
 
 function clamp(value, min, max) {
@@ -350,8 +342,8 @@ export default function RecommenderPage() {
         async function fetchData() {
             try {
                 const [carsResponse, filtersResponse] = await Promise.all([
-                    fetch(buildApiUrl("/cars")),
-                    fetch(buildApiUrl("/filters"))
+                    fetch(buildApiUrl("/cars.php")),
+                    fetch(buildApiUrl("/filters.php"))
                 ]);
 
                 if (!carsResponse.ok || !filtersResponse.ok) {
