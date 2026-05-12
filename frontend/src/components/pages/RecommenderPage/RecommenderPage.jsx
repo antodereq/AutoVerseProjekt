@@ -15,52 +15,77 @@ function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
 }
 
+function parseOptionalNumber(value) {
+    if (value === null || value === undefined) {
+        return NaN;
+    }
+
+    const trimmed = String(value).trim();
+    if (trimmed === "") {
+        return NaN;
+    }
+
+    const parsed = Number(trimmed);
+    return Number.isNaN(parsed) ? NaN : parsed;
+}
+
+function softToleranceScore(delta, tolerance) {
+    if (delta <= 0) {
+        return 1;
+    }
+
+    const scaled = delta / Math.max(tolerance, 1);
+    return Math.max(0, Math.min(1, 1 / (1 + scaled * 0.27)));
+}
+
 function scoreSoftRange(value, min, max) {
-    const actual = Number(value);
-    const lower = Number(min);
-    const upper = Number(max);
+    const actual = parseOptionalNumber(value);
+    const lower = parseOptionalNumber(min);
+    const upper = parseOptionalNumber(max);
+    const hasLower = !Number.isNaN(lower);
+    const hasUpper = !Number.isNaN(upper);
 
     if (Number.isNaN(actual)) {
         return 0;
     }
 
-    if (!Number.isNaN(lower) && !Number.isNaN(upper)) {
+    if (hasLower && hasUpper) {
         if (actual >= lower && actual <= upper) {
             return 1;
         }
 
         const range = Math.max(upper - lower, 1);
         const delta = actual < lower ? lower - actual : actual - upper;
-        const tolerance = Math.max(range * 0.6, range * 0.25, 5);
-        return clamp(1 - delta / tolerance, 0, 1);
+        const tolerance = Math.max(range * 0.35, Math.min(Math.abs(lower), Math.abs(upper)) * 0.08, 10);
+        return softToleranceScore(delta, tolerance);
     }
 
-    if (!Number.isNaN(lower)) {
+    if (hasLower) {
         if (actual >= lower) {
             return 1;
         }
         const delta = lower - actual;
-        const tolerance = Math.max(lower * 0.2, 10);
-        return clamp(1 - delta / tolerance, 0, 1);
+        const tolerance = Math.max(Math.abs(lower) * 0.28, 20, 8);
+        return softToleranceScore(delta, tolerance);
     }
 
-    if (!Number.isNaN(upper)) {
+    if (hasUpper) {
         if (actual <= upper) {
             return 1;
         }
         const delta = actual - upper;
-        const tolerance = Math.max(upper * 0.2, 5);
-        return clamp(1 - delta / tolerance, 0, 1);
+        const tolerance = Math.max(Math.abs(upper) * 0.32, 22, 8);
+        return softToleranceScore(delta, tolerance);
     }
 
     return 0;
 }
 
 function scoreYearRange(car, yearFrom, yearTo) {
-    const prefFrom = Number(yearFrom);
-    const prefTo = Number(yearTo);
-    const carFrom = Number(car.yearFrom);
-    const carTo = Number(car.yearTo);
+    const prefFrom = parseOptionalNumber(yearFrom);
+    const prefTo = parseOptionalNumber(yearTo);
+    const carFrom = parseOptionalNumber(car.yearFrom);
+    const carTo = parseOptionalNumber(car.yearTo);
 
     if (Number.isNaN(carFrom) || Number.isNaN(carTo)) {
         return 0;
@@ -81,14 +106,14 @@ function scoreYearRange(car, yearFrom, yearTo) {
     }
 
     const gap = carTo < effectiveFrom ? effectiveFrom - carTo : carFrom - effectiveTo;
-    const prefRange = Math.max((effectiveTo - effectiveFrom), 5);
-    const tolerance = Math.max(prefRange * 0.6, 5);
-    return clamp(1 - gap / tolerance, 0, 1);
+    const prefRange = Math.max(effectiveTo - effectiveFrom, 5);
+    const tolerance = Math.max(prefRange * 1.0, 8);
+    return Math.max(0, Math.min(1, 1 / (1 + gap / tolerance)));
 }
 
 function scoreLowerIsBetter(value, maxValue) {
-    const actual = Number(value);
-    const max = Number(maxValue);
+    const actual = parseOptionalNumber(value);
+    const max = parseOptionalNumber(maxValue);
     if (Number.isNaN(actual) || Number.isNaN(max)) {
         return 0;
     }
@@ -98,8 +123,8 @@ function scoreLowerIsBetter(value, maxValue) {
     }
 
     const delta = actual - max;
-    const tolerance = Math.max(max * 0.2, 2);
-    return clamp(1 - delta / tolerance, 0, 1);
+    const tolerance = Math.max(Math.abs(max) * 0.24, 4, 2);
+    return softToleranceScore(delta, tolerance);
 }
 
 function buildExplanation(scoreDetails, totalScore) {
@@ -240,6 +265,18 @@ function calculateMatchScore(preferences, car) {
     }
 
     const categories = [];
+    const weights = {
+        price: 27,
+        drive: 18,
+        transmission: 15,
+        body: 15,
+        power: 18,
+        year: 10,
+        consumption: 8,
+        fuel: 5,
+        architecture: 4,
+        capacity: 4,
+    };
 
     if (preferences.budgetMin !== "" || preferences.budgetMax !== "") {
         const priceScore = scoreSoftRange(
@@ -247,19 +284,19 @@ function calculateMatchScore(preferences, car) {
             preferences.budgetMin !== "" ? Number(preferences.budgetMin) : NaN,
             preferences.budgetMax !== "" ? Number(preferences.budgetMax) : NaN
         );
-        categories.push({ key: "price", score: priceScore, weight: 25 });
+        categories.push({ key: "price", score: priceScore, weight: weights.price });
     }
 
     if (preferences.driveTypes.length > 0) {
-        categories.push({ key: "drive", score: 1, weight: 16 });
+        categories.push({ key: "drive", score: 1, weight: weights.drive });
     }
 
     if (preferences.transmission !== "any") {
-        categories.push({ key: "transmission", score: 1, weight: 12 });
+        categories.push({ key: "transmission", score: 1, weight: weights.transmission });
     }
 
     if (preferences.bodyTypes.length > 0) {
-        categories.push({ key: "body", score: 1, weight: 12 });
+        categories.push({ key: "body", score: 1, weight: weights.body });
     }
 
     if (preferences.powerMin !== "" || preferences.powerMax !== "") {
@@ -268,25 +305,25 @@ function calculateMatchScore(preferences, car) {
             preferences.powerMin !== "" ? Number(preferences.powerMin) : NaN,
             preferences.powerMax !== "" ? Number(preferences.powerMax) : NaN
         );
-        categories.push({ key: "power", score: powerScore, weight: 15 });
+        categories.push({ key: "power", score: powerScore, weight: weights.power });
     }
 
     if (preferences.yearFrom !== "" || preferences.yearTo !== "") {
         const yearScore = scoreYearRange(car, preferences.yearFrom, preferences.yearTo);
-        categories.push({ key: "year", score: yearScore, weight: 8 });
+        categories.push({ key: "year", score: yearScore, weight: weights.year });
     }
 
     if (preferences.avgConsumptionMax !== "") {
         const consumptionScore = scoreLowerIsBetter(car.avgConsumptionLPer100, preferences.avgConsumptionMax);
-        categories.push({ key: "consumption", score: consumptionScore, weight: 6 });
+        categories.push({ key: "consumption", score: consumptionScore, weight: weights.consumption });
     }
 
     if (preferences.fuelType !== "any") {
-        categories.push({ key: "fuel", score: 1, weight: 4 });
+        categories.push({ key: "fuel", score: 1, weight: weights.fuel });
     }
 
     if (preferences.engineLayout !== "") {
-        categories.push({ key: "architecture", score: 1, weight: 4 });
+        categories.push({ key: "architecture", score: 1, weight: weights.architecture });
     }
 
     if (preferences.engineCapacityMin !== "" || preferences.engineCapacityMax !== "") {
@@ -295,7 +332,7 @@ function calculateMatchScore(preferences, car) {
             preferences.engineCapacityMin !== "" ? Number(preferences.engineCapacityMin) : NaN,
             preferences.engineCapacityMax !== "" ? Number(preferences.engineCapacityMax) : NaN
         );
-        categories.push({ key: "capacity", score: capacityScore, weight: 4 });
+        categories.push({ key: "capacity", score: capacityScore, weight: weights.capacity });
     }
 
     const activeCategories = categories.filter((category) => category.weight > 0);
