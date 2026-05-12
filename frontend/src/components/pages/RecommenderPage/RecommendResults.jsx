@@ -35,7 +35,8 @@ export default function RecommendResults({ preferences, results }) {
             <div className="d-flex flex-column gap-3">
                 {results.map(function (car, index) {
                     const barWidth = car.matchScore + "%";
-                    const title = car.brand + " " + car.model + " (" + car.yearFrom + "–" + car.yearTo + ")";
+                    const displayYearTo = Number(car.yearTo) > 0 ? car.yearTo : new Date().getFullYear();
+                    const title = car.brand + " " + car.model + " (" + car.yearFrom + "–" + displayYearTo + ")";
 
                     return (
                         <div
