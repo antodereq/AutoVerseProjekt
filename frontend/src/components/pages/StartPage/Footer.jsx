@@ -1,17 +1,36 @@
-// src/components/pages/StartPage/Footer.jsx
 import React from "react";
 
 export default function Footer() {
     return (
-        <footer className="py-3 bg-dark text-white-50">
-            <div className="container d-flex flex-column flex-md-row justify-content-between align-items-center gap-2 small">
-                <div>© {new Date().getFullYear()} AutoVerse. Wszystkie prawa zastrzeżone.</div>
-                <div><span className="fi fi-eu"></span> Nienawidzimy Unii Europejskiej</div>
-                <div><span className="fi fi-pl"></span> Wielka Polska Narodowa!</div>
-                <div className="d-flex gap-3">
-                    <a href="#top" className="link-light text-decoration-none">Wróć na górę</a>
-                    <a href="#" className="link-light text-decoration-none">Polityka prywatności</a>
+        <footer className="footer-section py-4">
+            <div className="container">
+
+                <div className="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+
+                    <div className="text-secondary small">
+                        © {new Date().getFullYear()} AutoVerse
+                    </div>
+
+                    <div className="d-flex gap-4 small">
+
+                        <a
+                            href="#top"
+                            className="footer-link"
+                        >
+                            Wróć na górę
+                        </a>
+
+                        <a
+                            href="#"
+                            className="footer-link"
+                        >
+                            Polityka prywatności
+                        </a>
+
+                    </div>
+
                 </div>
+
             </div>
         </footer>
     );

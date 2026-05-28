@@ -1,98 +1,129 @@
-// src/components/pages/StartPage/Modules.jsx
 import React from "react";
 import { Link } from "react-router-dom";
 import CarsDleLogo from "../../../assets/CarsDle-LOGO.svg";
-
 
 export default function Modules() {
     return (
         <section id="modules" className="py-5 bg-white">
             <div className="container">
-                <div className="text-center mb-4">
-                    <h2 className="fw-bold mb-2">Moduły AutoVerse</h2>
-                    <p className="text-muted mb-0">
-                        Jeden system, trzy różne sposoby na ogarnięcie świata samochodów.
+
+                <div className="text-center mb-5">
+                    <h2 className="fw-bold display-6 mb-3">
+                        Główne moduły
+                    </h2>
+
+                    <p className="text-secondary modules-subtitle mx-auto">
+                        Wszystko skupione wokół samochodów — od danych technicznych,
+                        przez porównania, aż po grywalizację.
                     </p>
                 </div>
 
                 <div className="row gy-4">
 
-                    {/* 1 */}
-                    <div className="col-md-4">
-                        <div className="card h-100 border-0 shadow-sm card-hover">
-                            <div className="card-body">
-                                <div className="icon-circle mb-3">🚗</div>
-                                <h5 className="card-title fw-semibold mb-2">Porównywarka samochodów</h5>
+                    {/* Compare */}
+                    <div className="col-lg-4">
+                        <div className="module-card h-100">
 
-                                <p className="text-muted mb-3">
-                                    Szczegółowe dane techniczne i statystyki gotowe do porównań.
-                                </p>
-
-                                <ul className="small text-muted mb-3">
-                                    <li>Porównanie parametrów</li>
-                                    <li>Zakres roczników i generacje</li>
-                                    <li>Zaawansowane konfiguracje</li>
-                                </ul>
-
-                                <Link to="/ComparePage" className="btn btn-sm btn-outline-orange">
-                                    Uruchom porównywarkę
-                                </Link>
+                            <div className="module-icon">
+                                🚗
                             </div>
+
+                            <h4 className="fw-bold mb-3">
+                                Porównywarka samochodów
+                            </h4>
+
+                            <p className="text-secondary mb-4">
+                                Porównuj konfiguracje, silniki, napędy,
+                                osiągi oraz dane techniczne wielu aut jednocześnie.
+                            </p>
+
+                            <ul className="module-list">
+                                <li>Różne generacje i konfiguracje</li>
+                                <li>Filtrowanie parametrów</li>
+                                <li>Nowoczesny widok porównania</li>
+                            </ul>
+
+                            <Link
+                                to="/ComparePage"
+                                className="btn btn-orange mt-auto"
+                            >
+                                Otwórz porównywarkę
+                            </Link>
+
                         </div>
                     </div>
 
-                    {/* 2 */}
-                    <div className="col-md-4">
-                        <div className="card h-100 border-0 shadow-sm card-hover">
-                            <div className="card-body">
-                                <div className="icon-circle mb-3">🎯</div>
-                                <h5 className="card-title fw-semibold mb-2">Rekomendator aut</h5>
+                    {/* Recommender */}
+                    <div className="col-lg-4">
+                        <div className="module-card h-100">
 
-                                <p className="text-muted mb-3">
-                                    Dopasowane rekomendacje na podstawie budżetu i preferencji.
-                                </p>
-
-                                <ul className="small text-muted mb-3">
-                                    <li>Preferencje (marka, model, skrzynia, napęd itp.)</li>
-                                    <li>Wiele wersji silnikowych</li>
-                                    <li>Analiza kosztów</li>
-                                </ul>
-
-                                <Link to="/RecommenderPage" className="btn btn-sm btn-outline-orange">
-                                    Uruchom rekomendator
-                                </Link>
+                            <div className="module-icon">
+                                🎯
                             </div>
+
+                            <h4 className="fw-bold mb-3">
+                                Rekomendator aut
+                            </h4>
+
+                            <p className="text-secondary mb-4">
+                                Szukasz auta pod budżet albo konkretne wymagania?
+                                System pomoże dobrać odpowiednie konfiguracje.
+                            </p>
+
+                            <ul className="module-list">
+                                <li>Budżet i preferencje</li>
+                                <li>Typ nadwozia, napęd, skrzynia</li>
+                                <li>Różne wersje silnikowe</li>
+                            </ul>
+
+                            <Link
+                                to="/RecommenderPage"
+                                className="btn btn-orange mt-auto"
+                            >
+                                Otwórz rekomendator
+                            </Link>
+
                         </div>
                     </div>
 
-                    {/* 3 */}
-                    <div className="col-md-4">
-                        <div className="card h-100 border-0 shadow-sm card-hover">
-                            <div className="card-body">
-                                <div className="icon-circle mb-3">
-                                    <img
-                                        src={CarsDleLogo}
-                                        alt="CarsDle logo"
-                                        className="img-fluid mb-2"
-                                        style={{ maxHeight: "40px" }}
-                                    />
-                                </div>
-                                <h5 className="card-title fw-semibold mb-2">CarsDle</h5>
+                    {/* CarsDle */}
+                    <div className="col-lg-4">
+                        <div className="module-card h-100">
 
-                                <p className="text-muted mb-3">
-                                    Typuj modele na podstawie podpowiedzi i zgadnij wylosowany samochód!
-                                </p>
-
-                                <ul className="small text-muted mb-3">
-                                    <li>Kolorystyczne wskazówki</li>
-                                    <li>Tryb endless</li>
-                                    <li>Codzienne losowanie</li>
-                                </ul>
-
-                                <a href="/carsdle" className="btn btn-sm btn-outline-orange">
-                                    Zagraj w CarsDle
-                                </a>
+                            {/*<div className="module-icon">*/}
+                            {/*    <img*/}
+                            {/*        src={CarsDleLogo}*/}
+                            {/*        alt="CarsDle"*/}
+                            {/*        className="img-fluid"*/}
+                            {/*        style={{ maxHeight: "42px" }}*/}
+                            {/*    />*/}
+                            {/*</div>*/}
+                            <div className="module-icon">
+                                🎯
                             </div>
+
+                            <h4 className="fw-bold mb-3">
+                                CarsDle
+                            </h4>
+
+                            <p className="text-secondary mb-4">
+                                Odkrywaj modele samochodów na podstawie podpowiedzi
+                                i sprawdzaj swoją wiedzę motoryzacyjną.
+                            </p>
+
+                            <ul className="module-list">
+                                <li>Kolorystyczne wskazówki</li>
+                                <li>Tryb endless</li>
+                                <li>Codzienne wyzwania</li>
+                            </ul>
+
+                            <a
+                                href="/carsdle"
+                                className="btn btn-orange mt-auto"
+                            >
+                                Zagraj teraz
+                            </a>
+
                         </div>
                     </div>
 

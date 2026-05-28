@@ -110,7 +110,8 @@ export default function Navbar() {
                         <li className="nav-item">
                             <a
                                 className="nav-link fw-semibold"
-                                href="/"
+                                href="https://carsDle.pl"
+                                target="_blank"
                             >
                                 CarsDle
                             </a>

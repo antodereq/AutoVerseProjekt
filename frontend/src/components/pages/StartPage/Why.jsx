@@ -29,7 +29,7 @@ export default function Why() {
                             <div className="d-flex flex-column gap-3 small">
                                 <div><span className="fw-semibold text-orange">Edukacja & developerka:</span> API, SQL, analizy.</div>
                                 <div><span className="fw-semibold text-orange">Rzetelne informacje:</span> prawdziwe dane samochodów.</div>
-                                <div><span className="fw-semibold text-orange">Gry przeglądarkowe:</span> CarsDle i grywalizacja.</div>
+                                <div><span className="fw-semibold text-orange">Gry przeglądarkowe:</span> CarsDle</div>
                             </div>
                         </div>
                     </div>
