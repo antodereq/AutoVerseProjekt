@@ -1,4 +1,3 @@
-// src/components/pages/StartPage/StartPage.jsx
 import React from "react";
 import "../../../styles/StartPage.css";
 

@@ -1,9 +1,19 @@
-// src/components/pages/ComparePage/ComparePage.jsx
 import { useEffect, useState } from "react";
 import Navbar from "../../universal/Navbar.jsx";
 import { API_URL } from "../../../config/api";
+import "./ComparePage.css";
 
-const MAX_SLOTS = 9;
+import {
+    ChangeFilter,
+    GetGenerations,
+    GetYears,
+    GetEngines,
+    GetBodies,
+    GetDrives,
+    GetGearboxes,
+} from "./ParamsFilters.js";
+
+const MAX_SLOTS = 5;
 
 export default function ComparePage() {
     const [inpCarName, setInpCarName] = useState("");
@@ -13,6 +23,10 @@ export default function ComparePage() {
     const [showCarList, setShowCarList] = useState(false);
     const [selectedCarId, setSelectedCarId] = useState(null);
     const [carParameters, setCarParameters] = useState({});
+    const [showDifferences, setShowDifferences] = useState(false);
+
+    const [saveName, setSaveName] = useState("");
+    const [saveMessage, setSaveMessage] = useState("");
 
     const [modelConfig, setModelConfig] = useState({
         generation: "",
@@ -25,9 +39,37 @@ export default function ComparePage() {
 
     const [comparedCars, setComparedCars] = useState([]);
     const [nextCompareID, setNextCompareID] = useState(1);
-    
 
     const fieldEmpty = inpCarName === "" && selectCarBrand === "";
+
+    const compareRows = [
+        { label: "Marka", field: "marka" },
+        { label: "Model", field: "model" },
+        { label: "Generacja", field: "generacja" },
+        { label: "Rocznik", field: "selectedYear" },
+        {
+            label: "Lata produkcji",
+            customClass: getProductionYearsDifferenceClass,
+            value: (car) => `${car.rok_od} - ${car.rok_do}`,
+        },
+        { label: "Silnik", field: "silnik_kod" },
+        { label: "Nazwa silnika", field: "silnik_nazwa" },
+        { label: "Pojemność", field: "pojemnosc_cm3", suffix: " cm3" },
+        { label: "Liczba cylindrów", field: "liczba_cylindrow" },
+        { label: "Układ cylindrów", field: "uklad_cylindrow" },
+        { label: "Moc [KM]", field: "moc_km", suffix: " KM" },
+        { label: "Moment [Nm]", field: "moment_nm", suffix: " Nm" },
+        { label: "Nadwozie", field: "nadwozie" },
+        { label: "Napęd", field: "naped" },
+        { label: "Skrzynia", field: "skrzynia" },
+        { label: "Liczba biegów", field: "ilosc_biegow" },
+        { label: "Paliwo", field: "typ_paliwa" },
+        { label: "Doładowanie", field: "doladowanie" },
+        { label: "0-100 km/h", field: "przyspieszenie_0_100", suffix: " s" },
+        { label: "Prędkość maks.", field: "predkosc_max", suffix: " km/h" },
+        { label: "Spalanie średnie", field: "spalanie_srednie", suffix: " l/100km" },
+        { label: "Masa własna", field: "masa_wlasna_kg", suffix: " kg" },
+    ];
 
     useEffect(() => {
         async function fetchBrands() {
@@ -107,203 +149,18 @@ export default function ComparePage() {
         });
     }
 
-    function ChangeFilter(name, value) {
-        setModelConfig({
-            ...modelConfig,
-            [name]: value,
-        });
+    function handleChangeFilter(name, value) {
+        ChangeFilter(modelConfig, setModelConfig, name, value);
     }
 
-    function GetFilteredConfigurations(configurations, skipFilter) {
-        if (!configurations) {
-            return [];
-        }
-
-        return configurations.filter((config) => {
-            if (skipFilter !== "generation" && modelConfig.generation !== "") {
-                if (config.generacja_id != modelConfig.generation) {
-                    return false;
-                }
-            }
-
-            if (skipFilter !== "year" && modelConfig.year !== "") {
-                if (!(Number(config.rok_od) <= Number(modelConfig.year) && Number(config.rok_do) >= Number(modelConfig.year))) {
-                    return false;
-                }
-            }
-
-            if (skipFilter !== "engine" && modelConfig.engine !== "") {
-                if (config.silnik_id != modelConfig.engine) {
-                    return false;
-                }
-            }
-
-            if (skipFilter !== "body" && modelConfig.body !== "") {
-                if (config.nadwozie_id != modelConfig.body) {
-                    return false;
-                }
-            }
-
-            if (skipFilter !== "drive" && modelConfig.drive !== "") {
-                if (config.naped_id != modelConfig.drive) {
-                    return false;
-                }
-            }
-
-            if (skipFilter !== "gearbox" && modelConfig.gearbox !== "") {
-                if (config.skrzynia_id != modelConfig.gearbox) {
-                    return false;
-                }
-            }
-
-            return true;
-        });
-    }
-
-    function GetGenerations(configurations) {
-        let filteredConfigurations = GetFilteredConfigurations(configurations, "generation");
-        let generations = [];
-
-        filteredConfigurations.forEach((config) => {
-            let alreadyExists = false;
-
-            generations.forEach((generation) => {
-                if (generation.id == config.generacja_id) {
-                    alreadyExists = true;
-                }
-            });
-
-            if (alreadyExists == false) {
-                generations.push({
-                    id: config.generacja_id,
-                    name: config.generacja,
-                });
-            }
-        });
-
-        return generations;
-    }
-
-    function GetYears(configurations) {
-        let filteredConfigurations = GetFilteredConfigurations(configurations, "year");
-        let years = [];
-
-        filteredConfigurations.forEach((config) => {
-            for (let year = Number(config.rok_od); year <= Number(config.rok_do); year++) {
-                if (!years.includes(year)) {
-                    years.push(year);
-                }
-            }
-        });
-
-        return years.sort();
-    }
-
-    function GetEngines(configurations) {
-        let filteredConfigurations = GetFilteredConfigurations(configurations, "engine");
-        let engines = [];
-
-        filteredConfigurations.forEach((config) => {
-            let alreadyExists = false;
-
-            engines.forEach((engine) => {
-                if (engine.id == config.silnik_id) {
-                    alreadyExists = true;
-                }
-            });
-
-            if (alreadyExists == false) {
-                engines.push({
-                    id: config.silnik_id,
-                    kod: config.silnik_kod,
-                    nazwa: config.silnik_nazwa,
-                    pojemnosc: config.pojemnosc_cm3,
-                });
-            }
-        });
-
-        return engines;
-    }
-
-    function GetBodies(configurations) {
-        let filteredConfigurations = GetFilteredConfigurations(configurations, "body");
-        let bodies = [];
-
-        filteredConfigurations.forEach((config) => {
-            let alreadyExists = false;
-
-            bodies.forEach((body) => {
-                if (body.id == config.nadwozie_id) {
-                    alreadyExists = true;
-                }
-            });
-
-            if (alreadyExists == false) {
-                bodies.push({
-                    id: config.nadwozie_id,
-                    name: config.nadwozie,
-                });
-            }
-        });
-
-        return bodies;
-    }
-
-    function GetDrives(configurations) {
-        let filteredConfigurations = GetFilteredConfigurations(configurations, "drive");
-        let drives = [];
-
-        filteredConfigurations.forEach((config) => {
-            let alreadyExists = false;
-
-            drives.forEach((drive) => {
-                if (drive.id == config.naped_id) {
-                    alreadyExists = true;
-                }
-            });
-
-            if (alreadyExists == false) {
-                drives.push({
-                    id: config.naped_id,
-                    name: config.naped,
-                });
-            }
-        });
-
-        return drives;
-    }
-
-    function GetGearboxes(configurations) {
-        let filteredConfigurations = GetFilteredConfigurations(configurations, "gearbox");
-        let gearboxes = [];
-
-        filteredConfigurations.forEach((config) => {
-            let alreadyExists = false;
-
-            gearboxes.forEach((gearbox) => {
-                if (gearbox.id == config.skrzynia_id) {
-                    alreadyExists = true;
-                }
-            });
-
-            if (alreadyExists == false) {
-                gearboxes.push({
-                    id: config.skrzynia_id,
-                    name: config.skrzynia,
-                });
-            }
-        });
-
-        return gearboxes;
-    }
     function AddCarToTable() {
         if (
-            modelConfig.body == "" ||
-            modelConfig.drive == "" ||
-            modelConfig.engine == "" ||
-            modelConfig.year == "" ||
-            modelConfig.generation == "" ||
-            modelConfig.gearbox == ""
+            modelConfig.body === "" ||
+            modelConfig.drive === "" ||
+            modelConfig.engine === "" ||
+            modelConfig.year === "" ||
+            modelConfig.generation === "" ||
+            modelConfig.gearbox === ""
         ) {
             return;
         }
@@ -349,6 +206,79 @@ export default function ComparePage() {
         setShowCarList(false);
     }
 
+    function RemoveCarFromTable(compareID) {
+        setComparedCars(comparedCars.filter((car) => car.compareID !== compareID));
+    }
+
+    function getDifferenceClass(fieldName) {
+        if (showDifferences === false) {
+            return "";
+        }
+
+        if (comparedCars.length < 2) {
+            return "";
+        }
+
+        const firstValue = comparedCars[0][fieldName];
+        const isDifferent = comparedCars.some((car) => car[fieldName] !== firstValue);
+
+        if (isDifferent) {
+            return "compare-different";
+        }
+
+        return "";
+    }
+
+    function getProductionYearsDifferenceClass() {
+        if (showDifferences === false) {
+            return "";
+        }
+
+        if (comparedCars.length < 2) {
+            return "";
+        }
+
+        const firstValue = `${comparedCars[0].rok_od}-${comparedCars[0].rok_do}`;
+
+        const isDifferent = comparedCars.some((car) => {
+            return `${car.rok_od}-${car.rok_do}` !== firstValue;
+        });
+
+        if (isDifferent) {
+            return "compare-different";
+        }
+
+        return "";
+    }
+
+    function getRowClass(row) {
+        if (row.customClass) {
+            return row.customClass();
+        }
+
+        return getDifferenceClass(row.field);
+    }
+
+    function getValue(car, row) {
+        let value;
+
+        if (row.value) {
+            value = row.value(car);
+        } else {
+            value = car[row.field];
+        }
+
+        if (value === null || value === undefined || value === "") {
+            return "—";
+        }
+
+        if (row.suffix) {
+            return `${value}${row.suffix}`;
+        }
+
+        return value;
+    }
+
     function rendermodelConfigOnCard(car) {
         if (selectedCarId !== car.id) {
             return null;
@@ -358,15 +288,15 @@ export default function ComparePage() {
             return null;
         }
 
-        let generations = GetGenerations(carParameters.konfiguracje);
-        let years = GetYears(carParameters.konfiguracje);
-        let engines = GetEngines(carParameters.konfiguracje);
-        let bodies = GetBodies(carParameters.konfiguracje);
-        let drives = GetDrives(carParameters.konfiguracje);
-        let gearboxes = GetGearboxes(carParameters.konfiguracje);
+        let generations = GetGenerations(carParameters.konfiguracje, modelConfig);
+        let years = GetYears(carParameters.konfiguracje, modelConfig);
+        let engines = GetEngines(carParameters.konfiguracje, modelConfig);
+        let bodies = GetBodies(carParameters.konfiguracje, modelConfig);
+        let drives = GetDrives(carParameters.konfiguracje, modelConfig);
+        let gearboxes = GetGearboxes(carParameters.konfiguracje, modelConfig);
 
         return (
-            <div className="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-75 rounded-3 p-3 overflow-auto">
+            <div className="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-75 rounded-4 p-3 overflow-auto">
                 <button
                     type="button"
                     className="btn btn-sm btn-light position-absolute top-0 end-0 m-2 rounded-circle"
@@ -385,18 +315,15 @@ export default function ComparePage() {
                     ✕
                 </button>
 
-                <div
-                    className="w-100"
-                    onClick={(e) => e.stopPropagation()}
-                >
-                    <div className="text-white fw-semibold text-center mb-3">
+                <div className="w-100" onClick={(e) => e.stopPropagation()}>
+                    <div className="text-white fw-semibold text-center mb-3 pe-4">
                         {car.marka} {car.model}
                     </div>
 
                     <select
                         className="form-select form-select-sm mb-2"
                         value={modelConfig.generation}
-                        onChange={(e) => ChangeFilter("generation", e.target.value)}
+                        onChange={(e) => handleChangeFilter("generation", e.target.value)}
                     >
                         <option value="">Wybierz generację...</option>
 
@@ -412,7 +339,7 @@ export default function ComparePage() {
                     <select
                         className="form-select form-select-sm mb-2"
                         value={modelConfig.year}
-                        onChange={(e) => ChangeFilter("year", e.target.value)}
+                        onChange={(e) => handleChangeFilter("year", e.target.value)}
                     >
                         <option value="">Wybierz rocznik...</option>
 
@@ -428,7 +355,7 @@ export default function ComparePage() {
                     <select
                         className="form-select form-select-sm mb-2"
                         value={modelConfig.engine}
-                        onChange={(e) => ChangeFilter("engine", e.target.value)}
+                        onChange={(e) => handleChangeFilter("engine", e.target.value)}
                     >
                         <option value="">Wybierz silnik...</option>
 
@@ -444,7 +371,7 @@ export default function ComparePage() {
                     <select
                         className="form-select form-select-sm mb-2"
                         value={modelConfig.body}
-                        onChange={(e) => ChangeFilter("body", e.target.value)}
+                        onChange={(e) => handleChangeFilter("body", e.target.value)}
                     >
                         <option value="">Wybierz nadwozie...</option>
 
@@ -460,7 +387,7 @@ export default function ComparePage() {
                     <select
                         className="form-select form-select-sm mb-2"
                         value={modelConfig.drive}
-                        onChange={(e) => ChangeFilter("drive", e.target.value)}
+                        onChange={(e) => handleChangeFilter("drive", e.target.value)}
                     >
                         <option value="">Wybierz napęd...</option>
 
@@ -476,7 +403,7 @@ export default function ComparePage() {
                     <select
                         className="form-select form-select-sm"
                         value={modelConfig.gearbox}
-                        onChange={(e) => ChangeFilter("gearbox", e.target.value)}
+                        onChange={(e) => handleChangeFilter("gearbox", e.target.value)}
                     >
                         <option value="">Wybierz skrzynię...</option>
 
@@ -503,11 +430,11 @@ export default function ComparePage() {
 
     function openCarList() {
         return (
-            <div className="mt-3">
+            <div className="compare-picker-panel mt-3">
                 <div className="row g-2 mb-3">
-                    <div className="col-md-4">
+                    <div className="col-12 col-md-4">
                         <select
-                            className="form-select form-select-sm"
+                            className="form-select"
                             id="car-brand-select"
                             value={selectCarBrand}
                             onChange={(e) => setSelectCarBrand(e.target.value)}
@@ -524,11 +451,11 @@ export default function ComparePage() {
                         </select>
                     </div>
 
-                    <div className="col-md-8">
+                    <div className="col-12 col-md-8">
                         <input
                             type="text"
                             placeholder="Wyszukaj model..."
-                            className="form-control form-control-sm"
+                            className="form-control"
                             id="car-search-input"
                             value={inpCarName}
                             onChange={(e) => setInpCarName(e.target.value)}
@@ -539,11 +466,13 @@ export default function ComparePage() {
                 <div className="row g-3">
                     {carList.map((car) => {
                         return (
-                            <div className="col-12 col-md-6 col-lg-4" key={`${car.marka}-${car.model}`}>
+                            <div
+                                className="col-12 col-md-6 col-xl-4"
+                                key={`${car.marka}-${car.model}`}
+                            >
                                 <div
-                                    className="card h-100 shadow-sm border-0 position-relative overflow-hidden"
+                                    className="card h-100 shadow-sm border-0 position-relative overflow-hidden rounded-4 compare-pick-card"
                                     onClick={() => fetchCarParams(car.id)}
-                                    style={{ cursor: "pointer" }}
                                 >
                                     <img
                                         src={`/${car.sciezka}`}
@@ -556,13 +485,8 @@ export default function ComparePage() {
                                     />
 
                                     <div className="card-body text-start">
-                                        <div className="text-muted small">
-                                            {car.marka}
-                                        </div>
-
-                                        <div className="fs-5 fw-semibold">
-                                            {car.model}
-                                        </div>
+                                        <div className="text-muted small">{car.marka}</div>
+                                        <div className="fs-5 fw-semibold">{car.model}</div>
                                     </div>
 
                                     {rendermodelConfigOnCard(car)}
@@ -574,13 +498,70 @@ export default function ComparePage() {
             </div>
         );
     }
+    async function SaveComparison() {
+        if (comparedCars.length === 0) {
+            setSaveMessage("Dodaj przynajmniej jeden samochód do porównania.");
+            return;
+        }
+
+        if (saveName.trim() === "") {
+            setSaveMessage("Podaj nazwę porównania.");
+            return;
+        }
+
+        const konfiguracjeIds = comparedCars.map((car) => car.konfiguracja_id).filter((id) => id !== undefined && id !== null);
+
+        const payload = {
+            nazwa: saveName,
+            opis: "",
+            konfiguracje: konfiguracjeIds,
+        };
+
+        console.log("Wysyłane porównanie:", payload);
+        console.log("Porównywane auta:", comparedCars);
+
+        try {
+            const response = await fetch(`${API_URL}/saveComparison.php`, {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(payload),
+            });
+
+            const text = await response.text();
+            console.log("Odpowiedź backendu jako tekst:", text);
+
+            let data;
+
+            try {
+                data = JSON.parse(text);
+            } catch (error) {
+                setSaveMessage("Backend nie zwrócił poprawnego JSON-a. Sprawdź konsolę.");
+                return;
+            }
+
+            console.log("Odpowiedź backendu jako JSON:", data);
+
+            if (data.success) {
+                setSaveMessage("Porównanie zostało zapisane.");
+                setSaveName("");
+            } else {
+                setSaveMessage(data.message || data.error || "Nie udało się zapisać porównania.");
+            }
+        } catch (error) {
+            console.error("Błąd fetch:", error);
+            setSaveMessage("Wystąpił błąd podczas zapisywania porównania.");
+        }
+    }
 
     return (
         <div className="bg-light min-vh-100">
             <Navbar />
 
             <div className="container py-4">
-                <div className="d-flex justify-content-between align-items-center mb-3">
+                <div className="compare-hero mb-4">
                     <div>
                         <h1 className="fw-bold mb-1">
                             Porównywarka <span className="text-orange">AutoVerse</span>
@@ -593,310 +574,183 @@ export default function ComparePage() {
                     </div>
                 </div>
 
-                <div className="table-responsive mb-4">
-                    <table className="table table-bordered align-middle text-center">
-                        <thead className="table-light">
-                            <tr>
-                                <th style={{ width: "160px" }}>Parametr</th>
+                <div className="compare-toolbar mb-3">
+                    <button
+                        type="button"
+                        className="btn btn-warning fw-semibold"
+                        onClick={() => setShowCarList((prev) => !prev)}
+                        disabled={comparedCars.length >= MAX_SLOTS}
+                    >
+                        + Dodaj samochód
+                    </button>
 
-                                <th style={{ minWidth: "600px" }}>
-                                    <button
-                                        type="button"
-                                        className="w-100 h-100 border-0 bg-transparent"
-                                        style={{ padding: "16px" }}
-                                        onClick={() => setShowCarList((prev) => !prev)}
-                                    >
-                                        <div className="border rounded-3 p-3 h-100 d-flex flex-column justify-content-center">
-                                            <div style={{ fontSize: "32px", lineHeight: "1" }}>
-                                                +
-                                            </div>
+                    <div className="compare-count">
+                        {comparedCars.length} / {MAX_SLOTS} aut
+                    </div>
 
-                                            <div className="mt-2 fw-semibold">
-                                                Dodaj samochód
-                                            </div>
+                    <div className="form-check form-switch m-0 ms-lg-auto">
+                        <input
+                            className="form-check-input"
+                            type="checkbox"
+                            role="switch"
+                            id="showDifferencesSwitch"
+                            checked={showDifferences}
+                            onChange={(e) => setShowDifferences(e.target.checked)}
+                        />
 
-                                            <div className="small text-muted">
-                                                Slot 1 z {MAX_SLOTS}
-                                            </div>
-                                        </div>
-                                    </button>
+                        <label
+                            className="form-check-label fw-semibold"
+                            htmlFor="showDifferencesSwitch"
+                        >
+                            Pokaż różnice
+                        </label>
+                    </div>
+                    <div className="compare-save-box">
+                        <input
+                            type="text"
+                            className="form-control form-control-sm"
+                            placeholder="Nazwa porównania"
+                            value={saveName}
+                            onChange={(e) => setSaveName(e.target.value)}
+                            disabled={comparedCars.length === 0}
+                        />
 
-                                    {showCarList && openCarList()}
-                                </th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            <tr>
-                                <th scope="row">Marka</th>
-
-                                {comparedCars.map((car) => {
-                                    return (
-                                        <td key={car.compareID}>
-                                            {car.marka}
-                                        </td>
-                                    );
-                                })}
-                            </tr>
-
-                            <tr>
-                                <th scope="row">Model</th>
-
-                                {comparedCars.map((car) => {
-                                    return (
-                                        <td key={car.compareID}>
-                                            {car.model}
-                                        </td>
-                                    );
-                                })}
-                            </tr>
-
-                            <tr>
-                                <th scope="row">Generacja</th>
-
-                                {comparedCars.map((car) => {
-                                    return (
-                                        <td key={car.compareID}>
-                                            {car.generacja}
-                                        </td>
-                                    );
-                                })}
-                            </tr>
-
-                            <tr>
-                                <th scope="row">Rocznik</th>
-
-                                {comparedCars.map((car) => {
-                                    return (
-                                        <td key={car.compareID}>
-                                            {car.selectedYear}
-                                        </td>
-                                    );
-                                })}
-                            </tr>
-
-                            <tr>
-                                <th scope="row">Lata produkcji</th>
-
-                                {comparedCars.map((car) => {
-                                    return (
-                                        <td key={car.compareID}>
-                                            {car.rok_od} - {car.rok_do}
-                                        </td>
-                                    );
-                                })}
-                            </tr>
-
-                            <tr>
-                                <th scope="row">Silnik</th>
-
-                                {comparedCars.map((car) => {
-                                    return (
-                                        <td key={car.compareID}>
-                                            {car.silnik_kod}
-                                        </td>
-                                    );
-                                })}
-                            </tr>
-
-                            <tr>
-                                <th scope="row">Nazwa silnika</th>
-
-                                {comparedCars.map((car) => {
-                                    return (
-                                        <td key={car.compareID}>
-                                            {car.silnik_nazwa}
-                                        </td>
-                                    );
-                                })}
-                            </tr>
-
-                            <tr>
-                                <th scope="row">Pojemność</th>
-
-                                {comparedCars.map((car) => {
-                                    return (
-                                        <td key={car.compareID}>
-                                            {car.pojemnosc_cm3} cm3
-                                        </td>
-                                    );
-                                })}
-                            </tr>
-
-                            <tr>
-                                <th scope="row">Liczba cylindrów</th>
-
-                                {comparedCars.map((car) => {
-                                    return (
-                                        <td key={car.compareID}>
-                                            {car.liczba_cylindrow}
-                                        </td>
-                                    );
-                                })}
-                            </tr>
-
-                            <tr>
-                                <th scope="row">Układ cylindrów</th>
-
-                                {comparedCars.map((car) => {
-                                    return (
-                                        <td key={car.compareID}>
-                                            {car.uklad_cylindrow}
-                                        </td>
-                                    );
-                                })}
-                            </tr>
-
-                            <tr>
-                                <th scope="row">Moc [KM]</th>
-
-                                {comparedCars.map((car) => {
-                                    return (
-                                        <td key={car.compareID}>
-                                            {car.moc_km ?? "—"}
-                                        </td>
-                                    );
-                                })}
-                            </tr>
-
-                            <tr>
-                                <th scope="row">Moment [Nm]</th>
-
-                                {comparedCars.map((car) => {
-                                    return (
-                                        <td key={car.compareID}>
-                                            {car.moment_nm ?? "—"}
-                                        </td>
-                                    );
-                                })}
-                            </tr>
-
-                            <tr>
-                                <th scope="row">Nadwozie</th>
-
-                                {comparedCars.map((car) => {
-                                    return (
-                                        <td key={car.compareID}>
-                                            {car.nadwozie}
-                                        </td>
-                                    );
-                                })}
-                            </tr>
-
-                            <tr>
-                                <th scope="row">Napęd</th>
-
-                                {comparedCars.map((car) => {
-                                    return (
-                                        <td key={car.compareID}>
-                                            {car.naped}
-                                        </td>
-                                    );
-                                })}
-                            </tr>
-
-                            <tr>
-                                <th scope="row">Skrzynia</th>
-
-                                {comparedCars.map((car) => {
-                                    return (
-                                        <td key={car.compareID}>
-                                            {car.skrzynia}
-                                        </td>
-                                    );
-                                })}
-                            </tr>
-
-                            <tr>
-                                <th scope="row">Liczba biegów</th>
-
-                                {comparedCars.map((car) => {
-                                    return (
-                                        <td key={car.compareID}>
-                                            {car.ilosc_biegow ?? "—"}
-                                        </td>
-                                    );
-                                })}
-                            </tr>
-
-                            <tr>
-                                <th scope="row">Paliwo</th>
-
-                                {comparedCars.map((car) => {
-                                    return (
-                                        <td key={car.compareID}>
-                                            {car.typ_paliwa}
-                                        </td>
-                                    );
-                                })}
-                            </tr>
-
-                            <tr>
-                                <th scope="row">Doładowanie</th>
-
-                                {comparedCars.map((car) => {
-                                    return (
-                                        <td key={car.compareID}>
-                                            {car.doladowanie ?? "—"}
-                                        </td>
-                                    );
-                                })}
-                            </tr>
-
-                            <tr>
-                                <th scope="row">0-100 km/h</th>
-
-                                {comparedCars.map((car) => {
-                                    return (
-                                        <td key={car.compareID}>
-                                            {car.przyspieszenie_0_100 ?? "—"}
-                                        </td>
-                                    );
-                                })}
-                            </tr>
-
-                            <tr>
-                                <th scope="row">Prędkość maks.</th>
-
-                                {comparedCars.map((car) => {
-                                    return (
-                                        <td key={car.compareID}>
-                                            {car.predkosc_max ?? "—"}
-                                        </td>
-                                    );
-                                })}
-                            </tr>
-
-                            <tr>
-                                <th scope="row">Spalanie średnie</th>
-
-                                {comparedCars.map((car) => {
-                                    return (
-                                        <td key={car.compareID}>
-                                            {car.spalanie_srednie ?? "—"}
-                                        </td>
-                                    );
-                                })}
-                            </tr>
-
-                            <tr>
-                                <th scope="row">Masa własna</th>
-
-                                {comparedCars.map((car) => {
-                                    return (
-                                        <td key={car.compareID}>
-                                            {car.masa_wlasna_kg ?? "—"}
-                                        </td>
-                                    );
-                                })}
-                            </tr>
-                        </tbody>
-                    </table>
+                        <button
+                            type="button"
+                            className="btn btn-dark btn-sm fw-semibold"
+                            onClick={SaveComparison}
+                            disabled={comparedCars.length === 0}
+                        >
+                            Zapisz to porównanie
+                        </button>
+                    </div>
                 </div>
+                {saveMessage && (
+                    <div className="alert alert-info py-2 mt-2">
+                        {saveMessage}
+                    </div>
+                )}
 
-                <p className="text-muted small mt-2">
-                    Wybierz pierwszy samochód klikając w kafelek z „+ Dodaj samochód”.
-                </p>
+                {showCarList && openCarList()}
+
+                {comparedCars.length === 0 ? (
+                    <div className="compare-empty-state mt-4">
+                        <div className="compare-empty-icon">＋</div>
+                        <h4 className="fw-bold mb-2">Dodaj pierwszy samochód</h4>
+                        <p className="text-muted mb-3">
+                            Po dodaniu aut pojawi się tutaj czytelne porównanie parametrów.
+                        </p>
+
+                        <button
+                            type="button"
+                            className="btn btn-warning fw-semibold"
+                            onClick={() => setShowCarList(true)}
+                        >
+                            Wybierz samochód
+                        </button>
+                    </div>
+                ) : (
+                    <>
+                        <div className="compare-selected-cars my-4">
+                            {comparedCars.map((car) => {
+                                return (
+                                    <div className="compare-selected-card" key={car.compareID}>
+                                        <button
+                                            type="button"
+                                            className="compare-selected-remove"
+                                            onClick={() => RemoveCarFromTable(car.compareID)}
+                                        >
+                                            ×
+                                        </button>
+
+                                        <div className="small text-muted">{car.marka}</div>
+                                        <div className="fw-bold">{car.model}</div>
+                                        <div className="small text-muted">
+                                            {car.generacja} • {car.selectedYear}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        <div className="compare-desktop-table d-none d-lg-block">
+                            <div className="table-responsive compare-table-wrapper">
+                                <table className="table align-middle text-center compare-table mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th className="compare-param-col">Parametr</th>
+
+                                            {comparedCars.map((car) => {
+                                                return (
+                                                    <th key={car.compareID}>
+                                                        <div className="fw-bold">
+                                                            {car.marka} {car.model}
+                                                        </div>
+                                                        <div className="small text-muted">
+                                                            {car.selectedYear}
+                                                        </div>
+                                                    </th>
+                                                );
+                                            })}
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+                                        {compareRows.map((row) => {
+                                            return (
+                                                <tr key={row.label} className={getRowClass(row)}>
+                                                    <th scope="row" className="compare-param-col">
+                                                        {row.label}
+                                                    </th>
+
+                                                    {comparedCars.map((car) => {
+                                                        return (
+                                                            <td key={car.compareID}>
+                                                                {getValue(car, row)}
+                                                            </td>
+                                                        );
+                                                    })}
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div className="compare-mobile-list d-lg-none">
+                            {compareRows.map((row) => {
+                                return (
+                                    <div
+                                        className={`compare-mobile-row ${getRowClass(row)}`}
+                                        key={row.label}
+                                    >
+                                        <div className="compare-mobile-title">{row.label}</div>
+
+                                        <div className="compare-mobile-values">
+                                            {comparedCars.map((car) => {
+                                                return (
+                                                    <div
+                                                        className="compare-mobile-value"
+                                                        key={car.compareID}
+                                                    >
+                                                        <div className="small text-muted">
+                                                            {car.marka} {car.model}
+                                                        </div>
+
+                                                        <div className="fw-semibold">
+                                                            {getValue(car, row)}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </>
+                )}
             </div>
         </div>
     );
